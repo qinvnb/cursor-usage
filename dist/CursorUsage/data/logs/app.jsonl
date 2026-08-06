@@ -1,0 +1,14 @@
+{"timestamp":"2026-08-06T09:30:38.217932+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"ball","status":"stopped"}
+{"timestamp":"2026-08-06T09:30:38.218279+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"stopped"}
+{"timestamp":"2026-08-06T09:30:38.218717+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"starting"}
+{"timestamp":"2026-08-06T09:30:38.226267+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"running"}
+{"timestamp":"2026-08-06T09:39:22.454833+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"stopped"}
+{"timestamp":"2026-08-06T09:51:13.865169+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"ball","status":"stopped"}
+{"timestamp":"2026-08-06T09:51:13.866122+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"stopped"}
+{"timestamp":"2026-08-06T09:51:13.866905+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"starting"}
+{"timestamp":"2026-08-06T09:51:13.878128+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"running"}
+{"timestamp":"2026-08-06T09:55:05.578446+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"stopped"}
+{"timestamp":"2026-08-06T09:57:38.090000+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"ball","status":"stopped"}
+{"timestamp":"2026-08-06T09:57:38.090632+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"stopped"}
+{"timestamp":"2026-08-06T09:57:38.091311+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"starting"}
+{"timestamp":"2026-08-06T09:57:38.103762+00:00","level":"INFO","logger":"cursor_usage_app","message":"component state","component":"dock","status":"running"}

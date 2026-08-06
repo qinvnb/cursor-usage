@@ -1,0 +1,19 @@
+{
+  "taskbarWidget": {
+    "state": "running",
+    "visible": true,
+    "reason": "ok",
+    "pid": 31656,
+    "updatedAt": "2026-08-06T12:12:27.388945+00:00",
+    "taskbarHwnd": 986444,
+    "widgetHwnd": 9634156,
+    "dpi": 120,
+    "rect": {
+      "x": 12,
+      "y": 6,
+      "width": 275,
+      "height": 48
+    },
+    "retrySeconds": null
+  }
+}

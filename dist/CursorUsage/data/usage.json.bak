@@ -1,0 +1,847 @@
+{
+  "fetchedAt": "2026-08-06T12:10:44.543380+00:00",
+  "account": {
+    "email": "qinwei@ti-net.com.cn",
+    "membershipType": "enterprise",
+    "authSource": "local"
+  },
+  "planInfo": {
+    "planName": "Team",
+    "includedAmountCents": 2000,
+    "price": "$40/mo",
+    "billingCycleEnd": "1787453466000"
+  },
+  "periodUsage": {
+    "billingCycleStart": "1784775066000",
+    "billingCycleEnd": "1787453466000",
+    "planUsage": {
+      "totalSpend": 14170,
+      "includedSpend": 2000,
+      "bonusSpend": 12170,
+      "limit": 2000,
+      "remainingBonus": false,
+      "bonusTooltip": "We work with model providers to give you free usage beyond what you've purchased. Amounts may vary.",
+      "autoPercentUsed": 69.36428571428571,
+      "apiPercentUsed": 100,
+      "totalPercentUsed": 78.72222222222223
+    },
+    "spendLimitUsage": {
+      "totalSpend": 2001399,
+      "pooledUsed": 2001399,
+      "individualLimit": 60000,
+      "individualUsed": 53604,
+      "individualRemaining": 6396,
+      "limitType": "team"
+    },
+    "displayThreshold": 200,
+    "enabled": true,
+    "displayMessage": "You've used 90% of your included usage",
+    "autoModelSelectedDisplayMessage": "You've used 79% of your included total usage",
+    "namedModelSelectedDisplayMessage": "You've used 100% of your included API usage",
+    "autoBucketModels": [
+      "default",
+      "composer-1.5",
+      "composer-2",
+      "composer-2-fast",
+      "composer-2.5",
+      "composer-2.5-fast",
+      "vega",
+      "vega-medium",
+      "vega-high",
+      "vega-xhigh",
+      "vega-fast-medium",
+      "vega-fast-high",
+      "vega-fast-xhigh",
+      "grok-4.5",
+      "cursor-grok-4.5-low",
+      "cursor-grok-4.5-low-fast",
+      "cursor-grok-4.5-medium",
+      "cursor-grok-4.5-medium-fast",
+      "cursor-grok-4.5-high",
+      "cursor-grok-4.5-high-fast",
+      "grok-4.5-medium",
+      "grok-4.5-fast-medium",
+      "grok-4.5-high",
+      "grok-4.5-fast-high",
+      "grok-4.5-xhigh",
+      "grok-4.5-fast-xhigh",
+      "composer-1"
+    ]
+  },
+  "limitPolicy": {
+    "limitType": "seat-tier-upgrade",
+    "primaryButton": {
+      "label": "Request Upgrade",
+      "dashboardAction": {
+        "action": "requestLimitIncrease",
+        "args": {
+          "limitType": "seat-tier-upgrade"
+        },
+        "successMessage": "Seat upgrade request sent to your team admin"
+      }
+    }
+  },
+  "eventAggregation": {
+    "eventCount": 552,
+    "kindTotalsCents": {
+      "USAGE_EVENT_KIND_USAGE_BASED": 53563.15319156647,
+      "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS": 14170.157506406307,
+      "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED": 0.0
+    },
+    "onDemandModels": [
+      {
+        "model": "gpt-5.6-sol-max",
+        "costCents": 23211.972997188568,
+        "costDollars": 232.1197,
+        "sharePercent": 43.34,
+        "eventCount": 88,
+        "inputTokens": 2264072,
+        "outputTokens": 861553,
+        "cacheReadTokens": 189558723,
+        "cacheWriteTokens": 6490712
+      },
+      {
+        "model": "gpt-5.6-sol-medium",
+        "costCents": 20866.00025320053,
+        "costDollars": 208.66,
+        "sharePercent": 38.96,
+        "eventCount": 191,
+        "inputTokens": 1484136,
+        "outputTokens": 650493,
+        "cacheReadTokens": 181331021,
+        "cacheWriteTokens": 7895989
+      },
+      {
+        "model": "claude-fable-5-thinking-high",
+        "costCents": 9485.179941177368,
+        "costDollars": 94.8518,
+        "sharePercent": 17.71,
+        "eventCount": 32,
+        "inputTokens": 258375,
+        "outputTokens": 325815,
+        "cacheReadTokens": 30266997,
+        "cacheWriteTokens": 3208716
+      }
+    ],
+    "includedModels": [
+      {
+        "model": "cursor-grok-4.5-high",
+        "costCents": 6861.37687292695,
+        "costDollars": 68.6138,
+        "sharePercent": 48.42,
+        "eventCount": 170,
+        "inputTokens": 11437137,
+        "outputTokens": 637140,
+        "cacheReadTokens": 83929600,
+        "cacheWriteTokens": 0
+      },
+      {
+        "model": "gpt-5.6-sol-max",
+        "costCents": 4459.293121337891,
+        "costDollars": 44.5929,
+        "sharePercent": 31.47,
+        "eventCount": 15,
+        "inputTokens": 93,
+        "outputTokens": 23873,
+        "cacheReadTokens": 7448900,
+        "cacheWriteTokens": 2682400
+      },
+      {
+        "model": "cursor-grok-4.5-high-fast",
+        "costCents": 1457.3139974176884,
+        "costDollars": 14.5731,
+        "sharePercent": 10.28,
+        "eventCount": 13,
+        "inputTokens": 986969,
+        "outputTokens": 53838,
+        "cacheReadTokens": 9690432,
+        "cacheWriteTokens": 0
+      },
+      {
+        "model": "composer-2.5-fast",
+        "costCents": 1392.1735147237778,
+        "costDollars": 13.9217,
+        "sharePercent": 9.82,
+        "eventCount": 30,
+        "inputTokens": 2238661,
+        "outputTokens": 209496,
+        "cacheReadTokens": 8126624,
+        "cacheWriteTokens": 0
+      }
+    ],
+    "models": [
+      {
+        "model": "gpt-5.6-sol-max",
+        "onDemandCostCents": 23211.972997188568,
+        "onDemandCostDollars": 232.1197,
+        "includedCostCents": 4459.293121337891,
+        "includedCostDollars": 44.5929,
+        "totalCostCents": 27671.26611852646,
+        "totalCostDollars": 276.7127,
+        "eventCount": 103,
+        "inputTokens": 2264165,
+        "outputTokens": 885426,
+        "cacheReadTokens": 197007623,
+        "cacheWriteTokens": 9173112
+      },
+      {
+        "model": "gpt-5.6-sol-medium",
+        "onDemandCostCents": 20866.00025320053,
+        "onDemandCostDollars": 208.66,
+        "includedCostCents": 0.0,
+        "includedCostDollars": 0.0,
+        "totalCostCents": 20866.00025320053,
+        "totalCostDollars": 208.66,
+        "eventCount": 191,
+        "inputTokens": 1484136,
+        "outputTokens": 650493,
+        "cacheReadTokens": 181331021,
+        "cacheWriteTokens": 7895989
+      },
+      {
+        "model": "claude-fable-5-thinking-high",
+        "onDemandCostCents": 9485.179941177368,
+        "onDemandCostDollars": 94.8518,
+        "includedCostCents": 0.0,
+        "includedCostDollars": 0.0,
+        "totalCostCents": 9485.179941177368,
+        "totalCostDollars": 94.8518,
+        "eventCount": 32,
+        "inputTokens": 258375,
+        "outputTokens": 325815,
+        "cacheReadTokens": 30266997,
+        "cacheWriteTokens": 3208716
+      },
+      {
+        "model": "cursor-grok-4.5-high",
+        "onDemandCostCents": 0.0,
+        "onDemandCostDollars": 0.0,
+        "includedCostCents": 6861.37687292695,
+        "includedCostDollars": 68.6138,
+        "totalCostCents": 6861.37687292695,
+        "totalCostDollars": 68.6138,
+        "eventCount": 170,
+        "inputTokens": 11437137,
+        "outputTokens": 637140,
+        "cacheReadTokens": 83929600,
+        "cacheWriteTokens": 0
+      },
+      {
+        "model": "cursor-grok-4.5-high-fast",
+        "onDemandCostCents": 0.0,
+        "onDemandCostDollars": 0.0,
+        "includedCostCents": 1457.3139974176884,
+        "includedCostDollars": 14.5731,
+        "totalCostCents": 1457.3139974176884,
+        "totalCostDollars": 14.5731,
+        "eventCount": 13,
+        "inputTokens": 986969,
+        "outputTokens": 53838,
+        "cacheReadTokens": 9690432,
+        "cacheWriteTokens": 0
+      },
+      {
+        "model": "composer-2.5-fast",
+        "onDemandCostCents": 0.0,
+        "onDemandCostDollars": 0.0,
+        "includedCostCents": 1392.1735147237778,
+        "includedCostDollars": 13.9217,
+        "totalCostCents": 1392.1735147237778,
+        "totalCostDollars": 13.9217,
+        "eventCount": 30,
+        "inputTokens": 2238661,
+        "outputTokens": 209496,
+        "cacheReadTokens": 8126624,
+        "cacheWriteTokens": 0
+      }
+    ],
+    "daily": [
+      {
+        "date": "2026-07-23",
+        "onDemandCostCents": 1609.586540222168,
+        "includedCostCents": 4525.478120088577,
+        "totalCostCents": 6135.064660310745,
+        "eventCount": 26,
+        "topOnDemandModel": "gpt-5.6-sol-max",
+        "onDemandModels": [
+          {
+            "model": "gpt-5.6-sol-max",
+            "costCents": 1609.586540222168
+          }
+        ]
+      },
+      {
+        "date": "2026-07-24",
+        "onDemandCostCents": 3632.672134399414,
+        "includedCostCents": 1350.4023524820805,
+        "totalCostCents": 4983.0744868814945,
+        "eventCount": 31,
+        "topOnDemandModel": "gpt-5.6-sol-max",
+        "onDemandModels": [
+          {
+            "model": "gpt-5.6-sol-max",
+            "costCents": 3632.672134399414
+          }
+        ]
+      },
+      {
+        "date": "2026-07-25",
+        "onDemandCostCents": 0.0,
+        "includedCostCents": 151.54980373382568,
+        "totalCostCents": 151.54980373382568,
+        "eventCount": 3,
+        "topOnDemandModel": null,
+        "onDemandModels": []
+      },
+      {
+        "date": "2026-07-27",
+        "onDemandCostCents": 10.393449783325195,
+        "includedCostCents": 627.8187947273254,
+        "totalCostCents": 638.2122445106506,
+        "eventCount": 17,
+        "topOnDemandModel": "gpt-5.6-sol-max",
+        "onDemandModels": [
+          {
+            "model": "gpt-5.6-sol-max",
+            "costCents": 10.393449783325195
+          }
+        ]
+      },
+      {
+        "date": "2026-07-28",
+        "onDemandCostCents": 0.0,
+        "includedCostCents": 34.420000076293945,
+        "totalCostCents": 34.420000076293945,
+        "eventCount": 2,
+        "topOnDemandModel": null,
+        "onDemandModels": []
+      },
+      {
+        "date": "2026-07-29",
+        "onDemandCostCents": 8620.598123550415,
+        "includedCostCents": 243.58119702339172,
+        "totalCostCents": 8864.179320573807,
+        "eventCount": 40,
+        "topOnDemandModel": "claude-fable-5-thinking-high",
+        "onDemandModels": [
+          {
+            "model": "claude-fable-5-thinking-high",
+            "costCents": 8620.598123550415
+          }
+        ]
+      },
+      {
+        "date": "2026-07-30",
+        "onDemandCostCents": 6700.344124794006,
+        "includedCostCents": 1220.59881234169,
+        "totalCostCents": 7920.942937135696,
+        "eventCount": 101,
+        "topOnDemandModel": "gpt-5.6-sol-medium",
+        "onDemandModels": [
+          {
+            "model": "gpt-5.6-sol-medium",
+            "costCents": 4571.805460929871
+          },
+          {
+            "model": "gpt-5.6-sol-max",
+            "costCents": 1263.9568462371826
+          },
+          {
+            "model": "claude-fable-5-thinking-high",
+            "costCents": 864.5818176269531
+          }
+        ]
+      },
+      {
+        "date": "2026-08-01",
+        "onDemandCostCents": 203.99005126953125,
+        "includedCostCents": 0.0,
+        "totalCostCents": 203.99005126953125,
+        "eventCount": 1,
+        "topOnDemandModel": "gpt-5.6-sol-medium",
+        "onDemandModels": [
+          {
+            "model": "gpt-5.6-sol-medium",
+            "costCents": 203.99005126953125
+          }
+        ]
+      },
+      {
+        "date": "2026-08-02",
+        "onDemandCostCents": 537.2217483520508,
+        "includedCostCents": 0.0,
+        "totalCostCents": 537.2217483520508,
+        "eventCount": 7,
+        "topOnDemandModel": "gpt-5.6-sol-medium",
+        "onDemandModels": [
+          {
+            "model": "gpt-5.6-sol-medium",
+            "costCents": 537.2217483520508
+          }
+        ]
+      },
+      {
+        "date": "2026-08-03",
+        "onDemandCostCents": 50.52192687988281,
+        "includedCostCents": 285.1330015659332,
+        "totalCostCents": 335.65492844581604,
+        "eventCount": 26,
+        "topOnDemandModel": "gpt-5.6-sol-medium",
+        "onDemandModels": [
+          {
+            "model": "gpt-5.6-sol-medium",
+            "costCents": 50.52192687988281
+          }
+        ]
+      },
+      {
+        "date": "2026-08-04",
+        "onDemandCostCents": 13246.613276481628,
+        "includedCostCents": 880.1726096868515,
+        "totalCostCents": 14126.78588616848,
+        "eventCount": 111,
+        "topOnDemandModel": "gpt-5.6-sol-max",
+        "onDemandModels": [
+          {
+            "model": "gpt-5.6-sol-max",
+            "costCents": 10258.405105113983
+          },
+          {
+            "model": "gpt-5.6-sol-medium",
+            "costCents": 2988.2081713676453
+          }
+        ]
+      },
+      {
+        "date": "2026-08-05",
+        "onDemandCostCents": 5437.194286346436,
+        "includedCostCents": 3120.5447124540806,
+        "totalCostCents": 8557.738998800516,
+        "eventCount": 86,
+        "topOnDemandModel": "gpt-5.6-sol-max",
+        "onDemandModels": [
+          {
+            "model": "gpt-5.6-sol-max",
+            "costCents": 4822.063520431519
+          },
+          {
+            "model": "gpt-5.6-sol-medium",
+            "costCents": 615.130765914917
+          }
+        ]
+      },
+      {
+        "date": "2026-08-06",
+        "onDemandCostCents": 13514.01752948761,
+        "includedCostCents": 1730.4581022262573,
+        "totalCostCents": 15244.475631713867,
+        "eventCount": 88,
+        "topOnDemandModel": "gpt-5.6-sol-medium",
+        "onDemandModels": [
+          {
+            "model": "gpt-5.6-sol-medium",
+            "costCents": 11899.122128486633
+          },
+          {
+            "model": "gpt-5.6-sol-max",
+            "costCents": 1614.8954010009766
+          }
+        ]
+      }
+    ],
+    "onDemandTotalCents": 53563.15319156647,
+    "includedTotalCents": 14170.157506406307
+  },
+  "onDemandModels": [
+    {
+      "model": "gpt-5.6-sol-max",
+      "costCents": 23211.972997188568,
+      "costDollars": 232.1197,
+      "sharePercent": 43.34,
+      "eventCount": 88,
+      "inputTokens": 2264072,
+      "outputTokens": 861553,
+      "cacheReadTokens": 189558723,
+      "cacheWriteTokens": 6490712
+    },
+    {
+      "model": "gpt-5.6-sol-medium",
+      "costCents": 20866.00025320053,
+      "costDollars": 208.66,
+      "sharePercent": 38.96,
+      "eventCount": 191,
+      "inputTokens": 1484136,
+      "outputTokens": 650493,
+      "cacheReadTokens": 181331021,
+      "cacheWriteTokens": 7895989
+    },
+    {
+      "model": "claude-fable-5-thinking-high",
+      "costCents": 9485.179941177368,
+      "costDollars": 94.8518,
+      "sharePercent": 17.71,
+      "eventCount": 32,
+      "inputTokens": 258375,
+      "outputTokens": 325815,
+      "cacheReadTokens": 30266997,
+      "cacheWriteTokens": 3208716
+    }
+  ],
+  "includedModels": [
+    {
+      "model": "cursor-grok-4.5-high",
+      "costCents": 6861.37687292695,
+      "costDollars": 68.6138,
+      "sharePercent": 48.42,
+      "eventCount": 170,
+      "inputTokens": 11437137,
+      "outputTokens": 637140,
+      "cacheReadTokens": 83929600,
+      "cacheWriteTokens": 0
+    },
+    {
+      "model": "gpt-5.6-sol-max",
+      "costCents": 4459.293121337891,
+      "costDollars": 44.5929,
+      "sharePercent": 31.47,
+      "eventCount": 15,
+      "inputTokens": 93,
+      "outputTokens": 23873,
+      "cacheReadTokens": 7448900,
+      "cacheWriteTokens": 2682400
+    },
+    {
+      "model": "cursor-grok-4.5-high-fast",
+      "costCents": 1457.3139974176884,
+      "costDollars": 14.5731,
+      "sharePercent": 10.28,
+      "eventCount": 13,
+      "inputTokens": 986969,
+      "outputTokens": 53838,
+      "cacheReadTokens": 9690432,
+      "cacheWriteTokens": 0
+    },
+    {
+      "model": "composer-2.5-fast",
+      "costCents": 1392.1735147237778,
+      "costDollars": 13.9217,
+      "sharePercent": 9.82,
+      "eventCount": 30,
+      "inputTokens": 2238661,
+      "outputTokens": 209496,
+      "cacheReadTokens": 8126624,
+      "cacheWriteTokens": 0
+    }
+  ],
+  "models": [
+    {
+      "model": "gpt-5.6-sol-max",
+      "onDemandCostCents": 23211.972997188568,
+      "onDemandCostDollars": 232.1197,
+      "includedCostCents": 4459.293121337891,
+      "includedCostDollars": 44.5929,
+      "totalCostCents": 27671.26611852646,
+      "totalCostDollars": 276.7127,
+      "eventCount": 103,
+      "inputTokens": 2264165,
+      "outputTokens": 885426,
+      "cacheReadTokens": 197007623,
+      "cacheWriteTokens": 9173112
+    },
+    {
+      "model": "gpt-5.6-sol-medium",
+      "onDemandCostCents": 20866.00025320053,
+      "onDemandCostDollars": 208.66,
+      "includedCostCents": 0.0,
+      "includedCostDollars": 0.0,
+      "totalCostCents": 20866.00025320053,
+      "totalCostDollars": 208.66,
+      "eventCount": 191,
+      "inputTokens": 1484136,
+      "outputTokens": 650493,
+      "cacheReadTokens": 181331021,
+      "cacheWriteTokens": 7895989
+    },
+    {
+      "model": "claude-fable-5-thinking-high",
+      "onDemandCostCents": 9485.179941177368,
+      "onDemandCostDollars": 94.8518,
+      "includedCostCents": 0.0,
+      "includedCostDollars": 0.0,
+      "totalCostCents": 9485.179941177368,
+      "totalCostDollars": 94.8518,
+      "eventCount": 32,
+      "inputTokens": 258375,
+      "outputTokens": 325815,
+      "cacheReadTokens": 30266997,
+      "cacheWriteTokens": 3208716
+    },
+    {
+      "model": "cursor-grok-4.5-high",
+      "onDemandCostCents": 0.0,
+      "onDemandCostDollars": 0.0,
+      "includedCostCents": 6861.37687292695,
+      "includedCostDollars": 68.6138,
+      "totalCostCents": 6861.37687292695,
+      "totalCostDollars": 68.6138,
+      "eventCount": 170,
+      "inputTokens": 11437137,
+      "outputTokens": 637140,
+      "cacheReadTokens": 83929600,
+      "cacheWriteTokens": 0
+    },
+    {
+      "model": "cursor-grok-4.5-high-fast",
+      "onDemandCostCents": 0.0,
+      "onDemandCostDollars": 0.0,
+      "includedCostCents": 1457.3139974176884,
+      "includedCostDollars": 14.5731,
+      "totalCostCents": 1457.3139974176884,
+      "totalCostDollars": 14.5731,
+      "eventCount": 13,
+      "inputTokens": 986969,
+      "outputTokens": 53838,
+      "cacheReadTokens": 9690432,
+      "cacheWriteTokens": 0
+    },
+    {
+      "model": "composer-2.5-fast",
+      "onDemandCostCents": 0.0,
+      "onDemandCostDollars": 0.0,
+      "includedCostCents": 1392.1735147237778,
+      "includedCostDollars": 13.9217,
+      "totalCostCents": 1392.1735147237778,
+      "totalCostDollars": 13.9217,
+      "eventCount": 30,
+      "inputTokens": 2238661,
+      "outputTokens": 209496,
+      "cacheReadTokens": 8126624,
+      "cacheWriteTokens": 0
+    }
+  ],
+  "daily": [
+    {
+      "date": "2026-07-23",
+      "onDemandCostCents": 1609.586540222168,
+      "includedCostCents": 4525.478120088577,
+      "totalCostCents": 6135.064660310745,
+      "eventCount": 26,
+      "topOnDemandModel": "gpt-5.6-sol-max",
+      "onDemandModels": [
+        {
+          "model": "gpt-5.6-sol-max",
+          "costCents": 1609.586540222168
+        }
+      ]
+    },
+    {
+      "date": "2026-07-24",
+      "onDemandCostCents": 3632.672134399414,
+      "includedCostCents": 1350.4023524820805,
+      "totalCostCents": 4983.0744868814945,
+      "eventCount": 31,
+      "topOnDemandModel": "gpt-5.6-sol-max",
+      "onDemandModels": [
+        {
+          "model": "gpt-5.6-sol-max",
+          "costCents": 3632.672134399414
+        }
+      ]
+    },
+    {
+      "date": "2026-07-25",
+      "onDemandCostCents": 0.0,
+      "includedCostCents": 151.54980373382568,
+      "totalCostCents": 151.54980373382568,
+      "eventCount": 3,
+      "topOnDemandModel": null,
+      "onDemandModels": []
+    },
+    {
+      "date": "2026-07-27",
+      "onDemandCostCents": 10.393449783325195,
+      "includedCostCents": 627.8187947273254,
+      "totalCostCents": 638.2122445106506,
+      "eventCount": 17,
+      "topOnDemandModel": "gpt-5.6-sol-max",
+      "onDemandModels": [
+        {
+          "model": "gpt-5.6-sol-max",
+          "costCents": 10.393449783325195
+        }
+      ]
+    },
+    {
+      "date": "2026-07-28",
+      "onDemandCostCents": 0.0,
+      "includedCostCents": 34.420000076293945,
+      "totalCostCents": 34.420000076293945,
+      "eventCount": 2,
+      "topOnDemandModel": null,
+      "onDemandModels": []
+    },
+    {
+      "date": "2026-07-29",
+      "onDemandCostCents": 8620.598123550415,
+      "includedCostCents": 243.58119702339172,
+      "totalCostCents": 8864.179320573807,
+      "eventCount": 40,
+      "topOnDemandModel": "claude-fable-5-thinking-high",
+      "onDemandModels": [
+        {
+          "model": "claude-fable-5-thinking-high",
+          "costCents": 8620.598123550415
+        }
+      ]
+    },
+    {
+      "date": "2026-07-30",
+      "onDemandCostCents": 6700.344124794006,
+      "includedCostCents": 1220.59881234169,
+      "totalCostCents": 7920.942937135696,
+      "eventCount": 101,
+      "topOnDemandModel": "gpt-5.6-sol-medium",
+      "onDemandModels": [
+        {
+          "model": "gpt-5.6-sol-medium",
+          "costCents": 4571.805460929871
+        },
+        {
+          "model": "gpt-5.6-sol-max",
+          "costCents": 1263.9568462371826
+        },
+        {
+          "model": "claude-fable-5-thinking-high",
+          "costCents": 864.5818176269531
+        }
+      ]
+    },
+    {
+      "date": "2026-08-01",
+      "onDemandCostCents": 203.99005126953125,
+      "includedCostCents": 0.0,
+      "totalCostCents": 203.99005126953125,
+      "eventCount": 1,
+      "topOnDemandModel": "gpt-5.6-sol-medium",
+      "onDemandModels": [
+        {
+          "model": "gpt-5.6-sol-medium",
+          "costCents": 203.99005126953125
+        }
+      ]
+    },
+    {
+      "date": "2026-08-02",
+      "onDemandCostCents": 537.2217483520508,
+      "includedCostCents": 0.0,
+      "totalCostCents": 537.2217483520508,
+      "eventCount": 7,
+      "topOnDemandModel": "gpt-5.6-sol-medium",
+      "onDemandModels": [
+        {
+          "model": "gpt-5.6-sol-medium",
+          "costCents": 537.2217483520508
+        }
+      ]
+    },
+    {
+      "date": "2026-08-03",
+      "onDemandCostCents": 50.52192687988281,
+      "includedCostCents": 285.1330015659332,
+      "totalCostCents": 335.65492844581604,
+      "eventCount": 26,
+      "topOnDemandModel": "gpt-5.6-sol-medium",
+      "onDemandModels": [
+        {
+          "model": "gpt-5.6-sol-medium",
+          "costCents": 50.52192687988281
+        }
+      ]
+    },
+    {
+      "date": "2026-08-04",
+      "onDemandCostCents": 13246.613276481628,
+      "includedCostCents": 880.1726096868515,
+      "totalCostCents": 14126.78588616848,
+      "eventCount": 111,
+      "topOnDemandModel": "gpt-5.6-sol-max",
+      "onDemandModels": [
+        {
+          "model": "gpt-5.6-sol-max",
+          "costCents": 10258.405105113983
+        },
+        {
+          "model": "gpt-5.6-sol-medium",
+          "costCents": 2988.2081713676453
+        }
+      ]
+    },
+    {
+      "date": "2026-08-05",
+      "onDemandCostCents": 5437.194286346436,
+      "includedCostCents": 3120.5447124540806,
+      "totalCostCents": 8557.738998800516,
+      "eventCount": 86,
+      "topOnDemandModel": "gpt-5.6-sol-max",
+      "onDemandModels": [
+        {
+          "model": "gpt-5.6-sol-max",
+          "costCents": 4822.063520431519
+        },
+        {
+          "model": "gpt-5.6-sol-medium",
+          "costCents": 615.130765914917
+        }
+      ]
+    },
+    {
+      "date": "2026-08-06",
+      "onDemandCostCents": 13514.01752948761,
+      "includedCostCents": 1730.4581022262573,
+      "totalCostCents": 15244.475631713867,
+      "eventCount": 88,
+      "topOnDemandModel": "gpt-5.6-sol-medium",
+      "onDemandModels": [
+        {
+          "model": "gpt-5.6-sol-medium",
+          "costCents": 11899.122128486633
+        },
+        {
+          "model": "gpt-5.6-sol-max",
+          "costCents": 1614.8954010009766
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "planName": "Team",
+    "planPrice": "$40/mo",
+    "includedLimitCents": 2000.0,
+    "includedUsedCents": 2000.0,
+    "includedRemainingCents": 0.0,
+    "bonusSpendCents": 12170.0,
+    "individualLimitCents": 60000.0,
+    "individualUsedCents": 53604.0,
+    "individualRemainingCents": 6396.0,
+    "pooledUsedCents": 2001399.0,
+    "pooledLimitCents": null,
+    "pooledRemainingCents": null,
+    "onDemandTotalSpendCents": 2001399.0,
+    "unifiedUsedCents": 55604.0,
+    "unifiedUsedDollars": 556.04,
+    "onDemandEventCostCents": 0.0,
+    "onDemandEventCostDollars": 0.0,
+    "includedEventCostCents": 0.0,
+    "includedEventCostDollars": 0.0,
+    "autoPercentUsed": 69.36428571428571,
+    "apiPercentUsed": 100.0,
+    "totalPercentUsed": 78.72222222222223,
+    "modelCount": 0,
+    "topOnDemandModel": null,
+    "topModel": null,
+    "displayMessage": "You've used 90% of your included usage",
+    "billingCycleStart": "1784775066000",
+    "billingCycleEnd": "1787453466000",
+    "eventCount": null
+  }
+}
