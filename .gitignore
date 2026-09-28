@@ -1,0 +1,22 @@
+# Local runtime data (usage, email, credentials, logs)
+data/
+
+# Build / release artifacts
+build/
+dist/
+release/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Editors / OS
+.vscode/
+.idea/
+.cursor/
+Thumbs.db
+Desktop.ini
