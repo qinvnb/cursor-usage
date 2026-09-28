@@ -29,6 +29,20 @@ def _widget_style_fp(settings: dict[str, Any]) -> tuple[Any, ...]:
     return tuple(settings.get(k) for k in WIDGET_STYLE_KEYS)
 
 
+def _system_prefers_dark() -> bool:
+    if sys.platform != "win32":
+        return False
+    try:
+        import winreg
+
+        key = r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key) as handle:
+            value, _kind = winreg.QueryValueEx(handle, "AppsUseLightTheme")
+        return int(value) == 0
+    except OSError:
+        return False
+
+
 def _keep_alive() -> None:
     try:
         while True:
@@ -236,6 +250,8 @@ def main(argv: list[str] | None = None) -> int:
         "win_fullscreen": bool(settings.get("windowFullscreen")),
         "save_timer": None,
     }
+    window_visible = threading.Event()
+    stop_event = threading.Event()
     controller = AppController(logger)
     controller.add("ball", "--ball")
     controller.add("dock", "--dock")
@@ -258,7 +274,7 @@ def main(argv: list[str] | None = None) -> int:
         "height": max(480, win_h),
         "min_size": (640, 480),
         "hidden": start_hidden,
-        "background_color": "#F4F6F9",
+        "background_color": "#0B1120" if _system_prefers_dark() else "#F4F6F9",
         "fullscreen": bool(settings.get("windowFullscreen")) and not start_hidden,
         "maximized": bool(settings.get("windowMaximized"))
         and not bool(settings.get("windowFullscreen"))
@@ -274,6 +290,26 @@ def main(argv: list[str] | None = None) -> int:
         win_kwargs["y"] = int(win_y)
 
     main_window = webview.create_window("Cursor 用量", url, **win_kwargs)
+    if not start_hidden:
+        window_visible.set()
+
+    def set_page_active(active: bool) -> None:
+        """Pause dashboard polling/animations while the window sits in the tray."""
+        if active:
+            window_visible.set()
+        else:
+            window_visible.clear()
+        script = f"typeof setActive==='function'&&setActive({'true' if active else 'false'});"
+
+        def _run() -> None:
+            try:
+                main_window.evaluate_js(script)
+            except Exception:
+                pass
+
+        # evaluate_js blocks until the GUI thread runs the script; never call
+        # it inline from GUI-thread event handlers such as ``closing``.
+        threading.Thread(target=_run, daemon=True, name="page-active").start()
 
     def persist_window(extra: dict[str, Any] | None = None) -> None:
         patch = _read_window_geometry(main_window)
@@ -309,6 +345,7 @@ def main(argv: list[str] | None = None) -> int:
             main_window.show()
         except Exception:
             pass
+        set_page_active(True)
         # Prefer restoring maximized/fullscreen state without collapsing them.
         if state.get("win_fullscreen"):
             try:
@@ -432,6 +469,8 @@ def main(argv: list[str] | None = None) -> int:
 
     def quit_app() -> None:
         state["quitting"] = True
+        stop_event.set()
+        window_visible.set()
         persist_window()
         controller.stop()
         icon = state.get("tray_icon")
@@ -453,6 +492,7 @@ def main(argv: list[str] | None = None) -> int:
             main_window.hide()
         except Exception:
             return True
+        set_page_active(False)
         return False
 
     def on_resized(*_a: Any) -> None:
@@ -475,11 +515,13 @@ def main(argv: list[str] | None = None) -> int:
         schedule_persist()
 
     def poll_commands() -> None:
+        # command.json is only a fallback when the named-pipe IPC is
+        # unavailable, so a slow cadence is enough.
         while not state["quitting"]:
             try:
                 cmd = store.consume_command()
                 if not cmd:
-                    time.sleep(0.35)
+                    stop_event.wait(5.0)
                     continue
                 action = cmd.get("action")
                 if action == "show-main":
@@ -506,10 +548,13 @@ def main(argv: list[str] | None = None) -> int:
                     break
             except Exception:
                 pass
-            time.sleep(0.35)
+            stop_event.wait(0.35)
 
     def track_fullscreen() -> None:
         while not state["quitting"]:
+            window_visible.wait()
+            if state["quitting"]:
+                break
             try:
                 fs = bool(getattr(main_window, "fullscreen", False))
                 if fs != bool(state.get("win_fullscreen")):
@@ -519,9 +564,13 @@ def main(argv: list[str] | None = None) -> int:
                     persist_window()
             except Exception:
                 pass
-            time.sleep(1.0)
+            stop_event.wait(1.0)
+
+    def on_loaded(*_a: Any) -> None:
+        set_page_active(window_visible.is_set())
 
     main_window.events.closing += on_main_closing
+    main_window.events.loaded += on_loaded
     try:
         main_window.events.resized += on_resized
         main_window.events.moved += on_moved
@@ -583,6 +632,10 @@ def main(argv: list[str] | None = None) -> int:
         elif action == "quit":
             quit_app()
 
+    from . import alerts, updates
+    from .server import add_report_listener
+    from .tray import format_usage_lines, update_tray
+
     if not args.no_tray:
         try:
             from .tray import start_tray
@@ -598,9 +651,70 @@ def main(argv: list[str] | None = None) -> int:
                 dock_status=dock_status,
                 on_reembed=lambda: controller.restart("dock"),
                 on_export_diagnostics=export_diagnostics,
+                usage_lines=lambda: format_usage_lines(state.get("summary")),
+                update_info=lambda: updates.latest,
+                on_open_update=lambda: webbrowser.open(
+                    (updates.latest or {}).get("url") or updates.RELEASES_API
+                ),
             )
         except Exception as e:
-            print(f"托盘启动失败: {e}", file=sys.stderr)
+            logger.warning("tray start failed: %s", e)
+
+    def notify(title: str, message: str) -> None:
+        icon = state.get("tray_icon")
+        if icon is None:
+            return
+        try:
+            icon.notify(message, title)
+        except Exception:
+            logger.warning("tray notification failed", exc_info=True)
+
+    def on_report(report: dict[str, Any]) -> None:
+        summary = store.summary_from_report(report)
+        if summary != state.get("summary"):
+            state["summary"] = summary
+            if state.get("tray_icon") is not None:
+                update_tray(state["tray_icon"], summary)
+        if not store.load_settings().get("alertsEnabled", True):
+            return
+        previous_state = store.load_alerts_state()
+        to_send, new_state = alerts.pending_alerts(summary, previous_state)
+        if new_state.get("cycle") != previous_state.get("cycle") or to_send:
+            store.save_alerts_state({**previous_state, **new_state})
+        for alert in to_send:
+            notify(alert.title, alert.message)
+
+    state["summary"] = store.load_summary()
+    if state.get("tray_icon") is not None:
+        update_tray(state["tray_icon"], state["summary"])
+    add_report_listener(on_report)
+
+    def update_checker() -> None:
+        last_check = 0.0
+        if stop_event.wait(30.0):
+            return
+        while not state["quitting"]:
+            if (
+                store.load_settings().get("checkUpdates")
+                and time.monotonic() - last_check >= 24 * 3600
+            ):
+                last_check = time.monotonic()
+                try:
+                    found = updates.check_latest()
+                except Exception as exc:
+                    logger.info("update check failed: %s", exc)
+                    found = None
+                if found:
+                    alert_state = store.load_alerts_state()
+                    if alert_state.get("updateNotified") != found["version"]:
+                        store.save_alerts_state({**alert_state, "updateNotified": found["version"]})
+                        notify("Cursor 用量有新版本", f"v{found['version']} 已发布，可在托盘菜单打开下载页")
+                    if state.get("tray_icon") is not None:
+                        update_tray(state["tray_icon"], state.get("summary"))
+            if stop_event.wait(3600.0):
+                return
+
+    threading.Thread(target=update_checker, daemon=True, name="update-check").start()
 
     instance.register_callback(on_ipc_command)
     with pending_ipc_lock:
@@ -615,6 +729,8 @@ def main(argv: list[str] | None = None) -> int:
     webview.start()
 
     state["quitting"] = True
+    stop_event.set()
+    window_visible.set()
     persist_window()
     controller.stop()
     stop_background_scheduler()

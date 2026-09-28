@@ -18,12 +18,13 @@
         </div>
       </div>
       <nav class="side-nav" aria-label="主菜单">
-        <button type="button" class="nav-btn active" data-view="home"><span class="nav-icon">⌂</span>首页</button>
-        <button type="button" class="nav-btn" data-view="ondemand"><span class="nav-icon">↗</span>个人按需</button>
-        <button type="button" class="nav-btn" data-view="included"><span class="nav-icon">◫</span>套餐内</button>
-        <button type="button" class="nav-btn" data-view="daily"><span class="nav-icon">▥</span>日期</button>
-        <button type="button" class="nav-btn" data-view="models"><span class="nav-icon">◎</span>模型</button>
-        <button type="button" class="nav-btn" data-view="settings"><span class="nav-icon">⚙</span>设置</button>
+        <button type="button" class="nav-btn active" data-view="home"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>首页</button>
+        <button type="button" class="nav-btn" data-view="ondemand"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>个人按需</button>
+        <button type="button" class="nav-btn" data-view="included"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 15h4"/></svg></span>套餐内</button>
+        <button type="button" class="nav-btn" data-view="daily"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></span>日期</button>
+        <button type="button" class="nav-btn" data-view="models"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg></span>模型</button>
+        <button type="button" class="nav-btn" data-view="history"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg></span>历史周期</button>
+        <button type="button" class="nav-btn" data-view="settings"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></span>设置</button>
       </nav>
       <div class="side-footer">
         <span id="status" class="pill">连接中</span>
@@ -109,7 +110,8 @@
             <div class="card chart-card"><canvas id="ondBarChart"></canvas></div>
           </div>
           <div class="card table-card">
-            <table>
+            <div class="table-tools"><button type="button" class="btn ghost sm" data-export="ondTable" data-name="按需模型">导出 CSV</button></div>
+            <table class="sortable">
               <thead>
                 <tr><th>模型</th><th class="num">已用成本</th><th class="num">占比</th></tr>
               </thead>
@@ -189,7 +191,8 @@
           <div class="grid-2">
             <div class="chart-card"><canvas id="dailyChart"></canvas></div>
             <div class="table-wrap">
-              <table>
+              <div class="table-tools"><button type="button" class="btn ghost sm" data-export="dailyTable" data-name="按日用量">导出 CSV</button></div>
+              <table class="sortable">
                 <thead>
                   <tr>
                     <th>日期</th>
@@ -246,12 +249,34 @@
           </article>
         </section>
         <div class="card table-card section">
-          <table>
+          <div class="table-tools"><button type="button" class="btn ghost sm" data-export="combinedTable" data-name="模型合计">导出 CSV</button></div>
+          <table class="sortable">
             <thead>
               <tr><th>模型</th><th class="num">个人按需</th><th class="num">套餐内</th><th class="num">合计</th></tr>
             </thead>
             <tbody id="combinedTable"></tbody>
           </table>
+        </div>
+      </div>
+
+      <div id="view-history" class="view" hidden>
+        <header class="view-head">
+          <h1>历史周期</h1>
+          <p class="muted">每个计费周期结束时自动保存快照，用于跨周期对比</p>
+        </header>
+        <article class="card">
+          <h2>各周期合计</h2>
+          <div class="chart-card chart-card-sm"><canvas id="historyChart"></canvas></div>
+        </article>
+        <div class="card table-card section">
+          <div class="table-tools"><button type="button" class="btn ghost sm" data-export="historyTable" data-name="历史周期">导出 CSV</button></div>
+          <table class="sortable history-table">
+            <thead>
+              <tr><th>计费周期</th><th class="num">套餐内</th><th class="num">个人按需</th><th class="num">合计</th><th class="num">环比</th><th>头部模型</th></tr>
+            </thead>
+            <tbody id="historyTable"></tbody>
+          </table>
+          <p id="historyEmpty" class="muted small" hidden>暂无历史快照。当前周期结束后会自动记录，并保留最近 24 个周期。</p>
         </div>
       </div>
 
@@ -290,6 +315,16 @@
               </select>
               <p class="hint" id="authStatus">—</p>
             </div>
+          </div>
+          <div class="form-row switch-row">
+            <div>
+              <label for="setPersistLocalRefresh">令牌过期时由本工具刷新并写回 Cursor</label>
+              <p class="hint">默认关闭：Cursor 运行时会自行续期；开启后若刷新令牌被轮换，可能导致 Cursor 需要重新登录</p>
+            </div>
+            <label class="switch">
+              <input id="setPersistLocalRefresh" type="checkbox" />
+              <span class="slider"></span>
+            </label>
           </div>
           <div class="form-row">
             <label for="setSessionToken">Session / Access Token</label>
@@ -422,6 +457,30 @@
           <div class="settings-actions" style="margin-top:8px">
             <button id="resetPosBtn" type="button" class="btn ghost">重置悬浮球位置</button>
             <p class="hint" style="margin:0">任务栏组件由 Explorer 自动布局，不支持拖动或位置记忆。</p>
+          </div>
+        </section>
+
+        <section class="card settings-card">
+          <h2>通知与更新</h2>
+          <div class="form-row switch-row">
+            <div>
+              <label for="setAlerts">额度预警通知</label>
+              <p class="hint">用量达到 80% / 95%，或按当前节奏 3 天内将用完时弹出系统通知；每个计费周期每类只提醒一次</p>
+            </div>
+            <label class="switch">
+              <input id="setAlerts" type="checkbox" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="form-row switch-row">
+            <div>
+              <label for="setCheckUpdates">检查更新</label>
+              <p class="hint">每天最多访问一次 GitHub Releases，不上传任何用量数据。<span id="versionInfo"></span></p>
+            </div>
+            <label class="switch">
+              <input id="setCheckUpdates" type="checkbox" />
+              <span class="slider"></span>
+            </label>
           </div>
         </section>
 

@@ -3,20 +3,20 @@
 from __future__ import annotations
 
 import json
-import socket
 import threading
 import time
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Any
-from urllib.parse import urlparse
+from typing import Any, Callable
+from urllib.parse import parse_qs, urlparse
 
 from . import store
 from .fetch import UsageError, fetch_report
 
 DEFAULT_REFRESH_SECONDS = 60
 FULL_REFRESH_SECONDS = 10 * 60
+MAX_BODY_BYTES = 4 * 1024 * 1024
 _LOCAL_HTTP_HOSTS = {"127.0.0.1", "localhost", "::1"}
 
 _refresh_lock = threading.RLock()
@@ -32,6 +32,16 @@ _refresh_completed_generation = 0
 _scheduler_stop = threading.Event()
 _scheduler_interval = DEFAULT_REFRESH_SECONDS
 _scheduler_started = False
+BACKOFF_BASE_SECONDS = 30
+BACKOFF_MAX_SECONDS = 15 * 60
+_consecutive_failures = 0
+_next_auto_refresh_at = 0.0
+
+
+def _backoff_remaining() -> float | None:
+    """Seconds until automatic refreshes resume after failures (caller holds lock)."""
+    remaining = _next_auto_refresh_at - time.monotonic()
+    return remaining if _consecutive_failures and remaining > 0 else None
 
 
 def is_trusted_local_request(host_header: str | None, origin_header: str | None) -> bool:
@@ -63,30 +73,28 @@ def resource_dir() -> Path:
     return Path(__file__).resolve().parent.parent / "web"
 
 
+def export_csv(name: str, csv_text: str) -> Path:
+    """Write a CSV (UTF-8 with BOM so Excel detects the encoding) and reveal it."""
+    import re
+    import subprocess
+    import sys
+    from datetime import datetime
+
+    safe = re.sub(r'[\\/:*?"<>|\s]+', "_", name).strip("._") or "export"
+    folder = store.data_dir() / "exports"
+    folder.mkdir(parents=True, exist_ok=True)
+    destination = folder / f"{safe[:60]}-{datetime.now():%Y%m%d-%H%M%S}.csv"
+    destination.write_text(csv_text, encoding="utf-8-sig", newline="")
+    if sys.platform == "win32":
+        try:
+            subprocess.Popen(["explorer.exe", f"/select,{destination}"])
+        except OSError:
+            pass
+    return destination
+
+
 def summary_from_report(report: dict[str, Any]) -> dict[str, Any]:
-    summary = report.get("summary") or {}
-    account = report.get("account") or {}
-    plan = report.get("planInfo") or {}
-    individual_used = float(summary.get("individualUsedCents") or 0)
-    individual_limit = float(summary.get("individualLimitCents") or 0)
-    individual_left = float(summary.get("individualRemainingCents") or 0)
-    used_pct = (
-        min(100.0, individual_used / individual_limit * 100.0) if individual_limit > 0 else 0.0
-    )
-    return {
-        "fetchedAt": report.get("fetchedAt"),
-        "email": account.get("email"),
-        "planName": plan.get("planName"),
-        "unifiedUsedCents": summary.get("unifiedUsedCents"),
-        "individualUsedCents": individual_used,
-        "individualLimitCents": individual_limit,
-        "individualRemainingCents": individual_left,
-        "includedUsedCents": summary.get("includedUsedCents"),
-        "includedLimitCents": summary.get("includedLimitCents"),
-        "includedRemainingCents": summary.get("includedRemainingCents"),
-        "usedPercent": round(used_pct, 1),
-        "topOnDemandModel": summary.get("topOnDemandModel"),
-    }
+    return {"fetchedAt": report.get("fetchedAt"), **store.summary_from_report(report)}
 
 
 def status_payload() -> dict[str, Any]:
@@ -98,6 +106,8 @@ def status_payload() -> dict[str, Any]:
         running = _refresh_thread is not None
         running_models = _refresh_running_models
         error = _refresh_error
+        retry_in = _backoff_remaining()
+        failures = _consecutive_failures
     if not running and state == "success" and meta.get("lastError") and not meta.get("lastSuccessAt"):
         state = "error"
     return {
@@ -111,6 +121,8 @@ def status_payload() -> dict[str, Any]:
         "ageSeconds": age,
         "stale": age is None or age >= get_refresh_seconds(),
         "dataDir": str(store.data_dir()),
+        "consecutiveFailures": failures,
+        "retryInSeconds": round(retry_in) if retry_in is not None and not running else None,
     }
 
 
@@ -126,22 +138,61 @@ def _merge_lightweight_report(
         if key not in fresh or not fresh.get(key):
             if key in cached:
                 merged[key] = cached[key]
+    # Nested objects: fresh totals win, but fields only a full refresh can
+    # compute (event costs, top models, userId) are carried over.
+    for key in ("account", "summary"):
+        old, new = cached.get(key), fresh.get(key)
+        if isinstance(old, dict) and isinstance(new, dict):
+            combined = dict(old)
+            combined.update({k: v for k, v in new.items() if v not in (None, "")})
+            merged[key] = combined
+    summary = merged.get("summary")
+    old_summary = cached.get("summary") or {}
+    if isinstance(summary, dict):
+        for key in _EVENT_DERIVED_SUMMARY_KEYS:
+            if key in old_summary:
+                summary[key] = old_summary[key]
     return merged
 
 
-def _do_refresh(*, include_models: bool = True) -> str | None:
-    store.mark_refreshing(True)
-    try:
-        # Hard ceiling so a hung network call cannot leave UI/meta stuck forever.
-        old = socket.getdefaulttimeout()
-        socket.setdefaulttimeout(45)
+_EVENT_DERIVED_SUMMARY_KEYS = (
+    "onDemandEventCostCents",
+    "onDemandEventCostDollars",
+    "includedEventCostCents",
+    "includedEventCostDollars",
+    "modelCount",
+    "topOnDemandModel",
+    "topModel",
+    "eventCount",
+)
+
+
+_report_listeners: list[Callable[[dict[str, Any]], None]] = []
+
+
+def add_report_listener(listener: Callable[[dict[str, Any]], None]) -> None:
+    """Call ``listener(report)`` after every successful refresh (refresh thread)."""
+    _report_listeners.append(listener)
+
+
+def _notify_report_listeners(report: dict[str, Any]) -> None:
+    import logging
+
+    for listener in list(_report_listeners):
         try:
-            report = fetch_report(include_models=include_models)
-        finally:
-            socket.setdefaulttimeout(old)
+            listener(report)
+        except Exception:
+            logging.getLogger("cursor_usage_app").exception("report listener failed")
+
+
+def _do_refresh(*, include_models: bool = True) -> str | None:
+    # fetch_report bounds the total network time with a per-refresh deadline.
+    try:
+        report = fetch_report(include_models=include_models)
         if not include_models:
             report = _merge_lightweight_report(store.load_usage(), report)
         store.save_usage(report)
+        _notify_report_listeners(report)
         return None
     except UsageError as e:
         store.mark_refreshing(False, error=str(e))
@@ -164,8 +215,14 @@ def set_refresh_seconds(seconds: int) -> int:
     return value
 
 
-def request_refresh(*, include_models: bool = True, wait: bool = False) -> dict[str, Any]:
-    """Merge refresh requests into one serialized lightweight/full queue."""
+def request_refresh(
+    *, include_models: bool = True, wait: bool = False, auto: bool = False
+) -> dict[str, Any]:
+    """Merge refresh requests into one serialized lightweight/full queue.
+
+    ``auto`` requests (scheduler, stale-data reads) are skipped while the
+    failure backoff is active; user-initiated refreshes always run.
+    """
     global _refresh_thread, _refresh_pending, _refresh_pending_models
     global _refresh_running_models, _refresh_state, _refresh_error
     global _refresh_generation, _refresh_completed_generation
@@ -173,7 +230,7 @@ def request_refresh(*, include_models: bool = True, wait: bool = False) -> dict[
     def runner() -> None:
         global _refresh_thread, _refresh_pending, _refresh_pending_models
         global _refresh_running_models, _refresh_state, _refresh_error
-        global _refresh_completed_generation
+        global _refresh_completed_generation, _consecutive_failures, _next_auto_refresh_at
         while True:
             with _refresh_condition:
                 run_models = _refresh_pending_models
@@ -188,6 +245,16 @@ def request_refresh(*, include_models: bool = True, wait: bool = False) -> dict[
                     _refresh_completed_generation, run_generation
                 )
                 _refresh_error = error
+                if error:
+                    _consecutive_failures += 1
+                    delay = min(
+                        BACKOFF_MAX_SECONDS,
+                        BACKOFF_BASE_SECONDS * 2 ** (_consecutive_failures - 1),
+                    )
+                    _next_auto_refresh_at = time.monotonic() + delay
+                else:
+                    _consecutive_failures = 0
+                    _next_auto_refresh_at = 0.0
                 if _refresh_pending:
                     _refresh_state = "pending"
                     _refresh_condition.notify_all()
@@ -200,6 +267,8 @@ def request_refresh(*, include_models: bool = True, wait: bool = False) -> dict[
 
     with _refresh_condition:
         active = _refresh_thread is not None
+        if auto and not active and _backoff_remaining() is not None:
+            return status_payload()
         # A running equal-or-stronger refresh satisfies a later request.
         satisfied_by_running = (
             active
@@ -248,7 +317,7 @@ def start_background_scheduler(refresh_seconds: int) -> None:
             include_models = now - last_full >= max(
                 FULL_REFRESH_SECONDS, int(_scheduler_interval)
             )
-            request_refresh(include_models=include_models)
+            request_refresh(include_models=include_models, auto=True)
             if include_models:
                 last_full = now
 
@@ -297,6 +366,11 @@ class UsageHandler(SimpleHTTPRequestHandler):
                 },
             )
             return
+        if path == "/api/history":
+            report = store.load_usage()
+            current = store.cycle_snapshot(report) if report else None
+            self._send_json(200, {**store.load_history(), "current": current})
+            return
         if path == "/api/refresh":
             payload = request_refresh(include_models=True, wait=False)
             self._send_json(202, {"ok": True, "message": "刷新请求已进入队列", **payload})
@@ -310,12 +384,16 @@ class UsageHandler(SimpleHTTPRequestHandler):
                 settings["launchAtStartup"] = is_launch_at_startup()
             except Exception:
                 pass
+            from . import __version__, updates
+
             self._send_json(
                 200,
                 {
-                    **{k: v for k, v in settings.items()},
+                    **settings,
                     "refreshSeconds": get_refresh_seconds(),
                     "dataDir": str(store.data_dir()),
+                    "version": __version__,
+                    "update": updates.latest,
                     **store.credentials_public_info(),
                 },
             )
@@ -328,6 +406,7 @@ class UsageHandler(SimpleHTTPRequestHandler):
                     "refreshSeconds": get_refresh_seconds(),
                     "uiPollSeconds": settings.get("uiPollSeconds", 15),
                     "authSource": settings.get("authSource", "auto"),
+                    "lastView": settings.get("lastView", "home"),
                     "title": "Cursor 用量",
                     "features": {
                         "tray": True,
@@ -362,6 +441,16 @@ class UsageHandler(SimpleHTTPRequestHandler):
             except Exception as exc:
                 self._send_json(500, {"ok": False, "error": str(exc)})
             return
+        if path == "/api/export/csv":
+            payload = self._read_json_body()
+            if payload is None:
+                return
+            try:
+                destination = export_csv(str(payload.get("name") or "export"), str(payload.get("csv") or ""))
+                self._send_json(200, {"ok": True, "path": str(destination)})
+            except Exception as exc:
+                self._send_json(500, {"ok": False, "error": str(exc)})
+            return
         if path == "/api/taskbar/reembed":
             try:
                 from .instance import send_command
@@ -374,14 +463,13 @@ class UsageHandler(SimpleHTTPRequestHandler):
         if path != "/api/settings":
             self.send_error(404)
             return
-        length = int(self.headers.get("Content-Length") or 0)
-        raw = self.rfile.read(max(0, length)) if length else b"{}"
-        try:
-            payload = json.loads(raw.decode("utf-8") or "{}")
-            if not isinstance(payload, dict):
-                raise ValueError("body must be object")
-        except Exception as e:
-            self._send_json(400, {"error": f"无效 JSON: {e}"})
+        payload = self._read_json_body()
+        if payload is None:
+            return
+        if set(payload) == {"lastView"}:
+            # UI navigation state only: no need to notify components.
+            store.save_settings({"lastView": payload["lastView"]})
+            self._send_json(200, {"ok": True})
             return
 
         patch: dict[str, Any] = {}
@@ -399,6 +487,9 @@ class UsageHandler(SimpleHTTPRequestHandler):
             patch["authSource"] = payload["authSource"]
         if "startHidden" in payload:
             patch["startHidden"] = bool(payload["startHidden"])
+        for key in ("persistLocalRefresh", "alertsEnabled", "checkUpdates"):
+            if key in payload:
+                patch[key] = bool(payload[key])
         for key in (
             "ballSize",
             "ballOpacity",
@@ -494,11 +585,28 @@ class UsageHandler(SimpleHTTPRequestHandler):
             return
         self._send_json(200, out)
 
-    def _serve_usage(self) -> None:
+    def _read_json_body(self) -> dict[str, Any] | None:
+        """Parse a JSON object body, replying 400/413 and returning None on failure."""
+        length = int(self.headers.get("Content-Length") or 0)
+        if length > MAX_BODY_BYTES:
+            self._send_json(413, {"error": "请求体过大"})
+            return None
+        raw = self.rfile.read(max(0, length)) if length else b"{}"
+        try:
+            payload = json.loads(raw.decode("utf-8") or "{}")
+            if not isinstance(payload, dict):
+                raise ValueError("body must be object")
+        except Exception as e:
+            self._send_json(400, {"error": f"无效 JSON: {e}"})
+            return None
+        return payload
+
+    def _cached_report(self) -> dict[str, Any] | None:
+        """Return cached data (kicking a background refresh if stale) or send 404."""
         report = store.load_usage()
         if report is None:
             # Trigger fetch but return immediately so UI never hangs.
-            request_refresh(include_models=True, wait=False)
+            request_refresh(include_models=True, wait=False, auto=True)
             self._send_json(
                 404,
                 {
@@ -506,45 +614,55 @@ class UsageHandler(SimpleHTTPRequestHandler):
                     "status": status_payload(),
                 },
             )
-            return
-        # Optionally kick a refresh if stale, still serve old data now.
+            return None
         age = store.age_seconds()
         if age is None or age >= max(15, self.refresh_seconds):
-            request_refresh(include_models=False, wait=False)
-        self._send_json(200, self._with_cache_info(report))
+            request_refresh(include_models=False, wait=False, auto=True)
+        return report
+
+    def _serve_usage(self) -> None:
+        report = self._cached_report()
+        if report is None:
+            return
+        status = status_payload()
+        digest = str(status.get("usageDigest") or "")
+        fetched_at = status.get("fetchedAt") or report.get("fetchedAt")
+        cache = self._cache_info(status)
+        query = parse_qs(urlparse(self.path).query)
+        if digest and query.get("digest", [""])[0] == digest:
+            self._send_json(
+                200,
+                {
+                    "unchanged": True,
+                    "digest": digest,
+                    "fetchedAt": fetched_at,
+                    "cache": cache,
+                    "status": status,
+                },
+            )
+            return
+        out = dict(report)
+        out.update({"digest": digest, "fetchedAt": fetched_at, "cache": cache, "status": status})
+        self._send_json(200, out)
 
     def _serve_summary(self) -> None:
-        report = store.load_usage()
+        report = self._cached_report()
         if report is None:
-            request_refresh(include_models=True, wait=False)
-            self._send_json(
-                404,
-                {
-                    "error": "本地暂无数据，正在后台拉取",
-                    "status": status_payload(),
-                },
-            )
             return
-        age = store.age_seconds()
-        if age is None or age >= max(15, self.refresh_seconds):
-            request_refresh(include_models=False, wait=False)
+        status = status_payload()
         summary = summary_from_report(report)
-        summary["cache"] = self._cache_info()
+        summary["fetchedAt"] = status.get("fetchedAt") or summary.get("fetchedAt")
+        summary["cache"] = self._cache_info(status)
         self._send_json(200, summary)
 
-    def _cache_info(self) -> dict[str, Any]:
-        status = status_payload()
+    def _cache_info(self, status: dict[str, Any] | None = None) -> dict[str, Any]:
+        status = status or status_payload()
         return {
             "ageSeconds": status["ageSeconds"],
             "stale": status["stale"],
             "refreshState": status["refreshState"],
             "lastError": status["lastError"],
         }
-
-    def _with_cache_info(self, report: dict[str, Any]) -> dict[str, Any]:
-        out = dict(report)
-        out["cache"] = self._cache_info()
-        return out
 
     def _send_json(self, status: int, payload: dict[str, Any]) -> None:
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")

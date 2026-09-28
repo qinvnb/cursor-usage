@@ -8,9 +8,11 @@ from typing import Any
 from . import store
 from . import usage
 
+# One error type for every "usage could not be fetched" condition.
+UsageError = usage.CursorApiError
 
-class UsageError(RuntimeError):
-    """Raised when usage cannot be fetched."""
+FULL_REFRESH_DEADLINE_SECONDS = 150
+LIGHT_REFRESH_DEADLINE_SECONDS = 45
 
 
 def parse_session_input(raw: str) -> dict[str, str]:
@@ -74,84 +76,79 @@ def _resolve_manual_token(creds: dict[str, Any]) -> str:
     return new_access
 
 
-def _resolve_local_auth() -> tuple[dict[str, str], str]:
-    db_path = usage.state_db_path()
-    auth = usage.read_auth_keys(db_path)
-    token = usage.resolve_token(auth, db_path, persist=True)
-    return auth, token
+def _manual_auth(creds: dict[str, Any]) -> tuple[dict[str, str], str, str]:
+    token = _resolve_manual_token(creds)
+    auth = {
+        "cursorAuth/accessToken": token,
+        "cursorAuth/refreshToken": creds.get("refreshToken") or "",
+        "cursorAuth/cachedEmail": creds.get("email") or "(手动凭证)",
+    }
+    return auth, token, "manual"
 
 
 def resolve_auth() -> tuple[dict[str, str], str, str]:
     """Return (auth_dict, access_token, source) where source is manual|local|env."""
-    env = __import__("os").environ.get("CURSOR_SESSION_TOKEN") or __import__("os").environ.get(
-        "CURSOR_ACCESS_TOKEN"
-    )
+    env = usage.env_token()
     if env:
-        raw = env.replace("%3A%3A", "::")
-        token = raw.split("::", 1)[-1].strip()
         auth = {
-            "cursorAuth/accessToken": token,
+            "cursorAuth/accessToken": env,
             "cursorAuth/cachedEmail": "(环境变量)",
         }
-        return auth, token, "env"
+        return auth, env, "env"
 
     settings = store.load_settings()
     creds = store.load_credentials()
-    prefer_manual = settings.get("authSource") == "manual" and bool(creds.get("accessToken"))
-
-    if prefer_manual:
-        token = _resolve_manual_token(creds)
-        auth = {
-            "cursorAuth/accessToken": token,
-            "cursorAuth/refreshToken": creds.get("refreshToken") or "",
-            "cursorAuth/cachedEmail": creds.get("email") or "(手动凭证)",
-        }
-        return auth, token, "manual"
+    if settings.get("authSource") == "manual" and creds.get("accessToken"):
+        return _manual_auth(creds)
 
     try:
-        auth, token = _resolve_local_auth()
+        db_path = usage.state_db_path()
+        auth = usage.read_auth_keys(db_path)
+        token = usage.resolve_token(
+            auth, db_path, persist=bool(settings.get("persistLocalRefresh"))
+        )
         return auth, token, "local"
-    except SystemExit as e:
-        # Fallback to manual if local Cursor session missing
+    except UsageError:
+        # Fall back to manual credentials if the local Cursor session is unusable.
         if creds.get("accessToken"):
-            token = _resolve_manual_token(creds)
-            auth = {
-                "cursorAuth/accessToken": token,
-                "cursorAuth/refreshToken": creds.get("refreshToken") or "",
-                "cursorAuth/cachedEmail": creds.get("email") or "(手动凭证)",
-            }
-            return auth, token, "manual"
-        raise UsageError(str(e.args[0] if e.args else e)) from e
+            return _manual_auth(creds)
+        raise
 
 
-def fetch_report(*, persist_refresh: bool = True, include_models: bool = True) -> dict[str, Any]:
+def _lightweight_report(auth: dict[str, str], token: str, source: str) -> dict[str, Any]:
+    period, plan_raw = usage._run_parallel(
+        lambda: usage.connect_post("aiserver.v1.DashboardService/GetCurrentPeriodUsage", token),
+        lambda: usage.connect_post("aiserver.v1.DashboardService/GetPlanInfo", token),
+    )
+    for result in (period, plan_raw):
+        if isinstance(result, Exception):
+            raise result
+    plan = plan_raw.get("planInfo") or plan_raw
+    return {
+        "fetchedAt": datetime.now(timezone.utc).isoformat(),
+        "account": {
+            "email": auth.get("cursorAuth/cachedEmail"),
+            "membershipType": auth.get("cursorAuth/stripeMembershipType"),
+            "authSource": source,
+        },
+        "planInfo": plan,
+        "periodUsage": period,
+        "onDemandModels": [],
+        "includedModels": [],
+        "models": [],
+        "summary": usage.build_summary(period, plan, None, []),
+    }
+
+
+def fetch_report(*, include_models: bool = True) -> dict[str, Any]:
+    deadline = FULL_REFRESH_DEADLINE_SECONDS if include_models else LIGHT_REFRESH_DEADLINE_SECONDS
     try:
-        auth, token, source = resolve_auth()
-        if not include_models:
-            period = usage.connect_post(
-                "aiserver.v1.DashboardService/GetCurrentPeriodUsage", token
-            )
-            plan_raw = usage.connect_post(
-                "aiserver.v1.DashboardService/GetPlanInfo", token
-            )
-            plan = plan_raw.get("planInfo") or plan_raw
-            report = {
-                "fetchedAt": datetime.now(timezone.utc).isoformat(),
-                "account": {
-                    "email": auth.get("cursorAuth/cachedEmail"),
-                    "membershipType": auth.get("cursorAuth/stripeMembershipType"),
-                    "authSource": source,
-                },
-                "planInfo": plan,
-                "periodUsage": period,
-                "onDemandModels": [],
-                "includedModels": [],
-                "models": [],
-                "summary": usage.build_summary(period, plan, None, []),
-            }
-            return report
+        with usage.request_deadline(deadline):
+            auth, token, source = resolve_auth()
+            if not include_models:
+                return _lightweight_report(auth, token, source)
 
-        report = usage.build_report(auth, token)
+            report = usage.build_report(auth, token)
         account = report.setdefault("account", {})
         account["authSource"] = source
         if source == "manual" and not account.get("email"):
@@ -164,8 +161,5 @@ def fetch_report(*, persist_refresh: bool = True, include_models: bool = True) -
         return report
     except UsageError:
         raise
-    except SystemExit as e:
-        msg = e.args[0] if e.args else "获取用量失败"
-        raise UsageError(str(msg)) from e
     except Exception as e:
         raise UsageError(str(e)) from e

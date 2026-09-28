@@ -13,12 +13,14 @@ import json
 import os
 import sqlite3
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 API2 = "https://api2.cursor.sh"
 CURSOR_WEB = "https://cursor.com"
@@ -27,6 +29,88 @@ CONNECT_HEADERS = {
     "Content-Type": "application/json",
     "Connect-Protocol-Version": "1",
 }
+RETRY_STATUS = {429, 500, 502, 503, 504}
+MAX_ATTEMPTS = 3
+
+
+class CursorApiError(RuntimeError):
+    """Usage could not be fetched (auth, network or API error)."""
+
+    def __init__(self, message: str, *, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+
+
+_deadline = threading.local()
+
+
+@contextmanager
+def request_deadline(seconds: float) -> Iterator[None]:
+    """Bound the total wall time of every HTTP call made in this block."""
+    previous = getattr(_deadline, "at", None)
+    _deadline.at = time.monotonic() + seconds
+    try:
+        yield
+    finally:
+        _deadline.at = previous
+
+
+def _timeout(default: float) -> float:
+    at = getattr(_deadline, "at", None)
+    if at is None:
+        return default
+    remaining = at - time.monotonic()
+    if remaining <= 0:
+        raise CursorApiError("获取用量超时，请检查网络后重试")
+    return max(1.0, min(default, remaining))
+
+
+def _open_json(
+    req: urllib.request.Request, *, timeout: float, label: str, retry: bool = True
+) -> Any:
+    """urlopen + JSON decode with bounded retries on 429/5xx/network errors."""
+    delay = 1.0
+    attempts = MAX_ATTEMPTS if retry else 1
+    for attempt in range(1, attempts + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=_timeout(timeout)) as resp:
+                raw = resp.read().decode()
+                return json.loads(raw) if raw else {}
+        except urllib.error.HTTPError as e:
+            detail = e.read().decode(errors="replace")[:800]
+            if e.code not in RETRY_STATUS or attempt == attempts:
+                raise CursorApiError(f"HTTP {e.code} from {label}: {detail}", status=e.code) from e
+            retry_after = e.headers.get("Retry-After") if e.headers else None
+            try:
+                wait = min(10.0, float(retry_after)) if retry_after else delay
+            except ValueError:
+                wait = delay
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            if attempt == attempts:
+                reason = getattr(e, "reason", e)
+                raise CursorApiError(f"网络错误（{label}）: {reason}") from e
+            wait = delay
+        at = getattr(_deadline, "at", None)
+        if at is not None and time.monotonic() + wait >= at:
+            raise CursorApiError(f"获取用量超时（{label}）")
+        time.sleep(wait)
+        delay *= 2
+    raise CursorApiError(f"请求失败（{label}）")
+
+
+def _warn(message: str) -> None:
+    import logging
+
+    logging.getLogger("cursor_usage_app.usage").warning(message)
+
+
+def env_token() -> str | None:
+    """Access token from CURSOR_SESSION_TOKEN / CURSOR_ACCESS_TOKEN, if set."""
+    env = os.environ.get("CURSOR_SESSION_TOKEN") or os.environ.get("CURSOR_ACCESS_TOKEN")
+    if not env:
+        return None
+    raw = env.replace("%3A%3A", "::")
+    return raw.split("::", 1)[-1].strip() or None
 
 
 def state_db_path() -> Path:
@@ -46,18 +130,18 @@ def state_db_path() -> Path:
     if sys.platform == "win32":
         appdata = os.environ.get("APPDATA")
         if not appdata:
-            raise SystemExit("APPDATA is not set")
+            raise CursorApiError("APPDATA is not set")
         return Path(appdata) / "Cursor" / "User" / "globalStorage" / "state.vscdb"
     return Path.home() / ".config" / "Cursor" / "User" / "globalStorage" / "state.vscdb"
 
 
 def read_auth_keys(db_path: Path) -> dict[str, str]:
     if not db_path.is_file():
-        raise SystemExit(
+        raise CursorApiError(
             f"Cursor state DB not found: {db_path}\n"
             "Sign in to Cursor, then retry."
         )
-    conn = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro", uri=True)
+    conn = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro", uri=True, timeout=5)
     try:
         rows = conn.execute(
             "SELECT key, value FROM ItemTable WHERE key LIKE 'cursorAuth/%'"
@@ -68,7 +152,7 @@ def read_auth_keys(db_path: Path) -> dict[str, str]:
 
 
 def write_auth_key(db_path: Path, key: str, value: str) -> None:
-    conn = sqlite3.connect(str(db_path))
+    conn = sqlite3.connect(str(db_path), timeout=5)
     try:
         conn.execute(
             "INSERT INTO ItemTable(key, value) VALUES(?, ?) "
@@ -108,45 +192,54 @@ def refresh_access_token(refresh_token: str) -> dict[str, Any]:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return json.loads(resp.read().decode())
+    return _open_json(req, timeout=30, label="oauth/token", retry=False)
 
 
 def resolve_token(auth: dict[str, str], db_path: Path, persist: bool) -> str:
-    env = os.environ.get("CURSOR_SESSION_TOKEN") or os.environ.get("CURSOR_ACCESS_TOKEN")
+    """Return a valid access token from the local Cursor session.
+
+    An expired token is refreshed only when ``persist`` is True, because the
+    refresh token may rotate: refreshing without writing the new pair back to
+    ``state.vscdb`` could sign the Cursor app itself out.
+    """
+    env = env_token()
     if env:
-        raw = env.replace("%3A%3A", "::")
-        return raw.split("::", 1)[-1].strip()
+        return env
 
     access = auth.get("cursorAuth/accessToken")
     refresh = auth.get("cursorAuth/refreshToken")
     if not access:
-        raise SystemExit(
+        raise CursorApiError(
             "No cursorAuth/accessToken in local Cursor state. Sign in to Cursor first."
         )
 
     if not token_expired(access):
         return access
 
+    if not persist:
+        raise CursorApiError(
+            "本机 Cursor 登录令牌已过期：请打开 Cursor 让其自动续期，"
+            "或在设置中开启“令牌过期时由本工具刷新并写回 Cursor”"
+        )
+
     if not refresh:
-        raise SystemExit("Access token expired and no refresh token is available.")
+        raise CursorApiError("Access token expired and no refresh token is available.")
 
     data = refresh_access_token(refresh)
     if data.get("shouldLogout") or not data.get("access_token"):
-        raise SystemExit("Session expired. Sign in to Cursor again.")
+        raise CursorApiError("Session expired. Sign in to Cursor again.")
 
     new_access = data["access_token"]
-    if persist:
-        write_auth_key(db_path, "cursorAuth/accessToken", new_access)
-        if data.get("refresh_token"):
-            write_auth_key(db_path, "cursorAuth/refreshToken", data["refresh_token"])
+    write_auth_key(db_path, "cursorAuth/accessToken", new_access)
+    if data.get("refresh_token"):
+        write_auth_key(db_path, "cursorAuth/refreshToken", data["refresh_token"])
     return new_access
 
 
 def session_cookie(token: str) -> str:
     sub = jwt_payload(token).get("sub")
     if not sub:
-        raise SystemExit("JWT missing sub claim; cannot build session cookie.")
+        raise CursorApiError("JWT missing sub claim; cannot build session cookie.")
     # WorkOS cookie: sub%3A%3Ajwt
     return f"WorkosCursorSessionToken={sub}%3A%3A{token}"
 
@@ -159,13 +252,7 @@ def connect_post(path: str, token: str, payload: dict[str, Any] | None = None) -
         headers={**CONNECT_HEADERS, "Authorization": f"Bearer {token}"},
         method="POST",
     )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            raw = resp.read().decode()
-            return json.loads(raw) if raw else {}
-    except urllib.error.HTTPError as e:
-        detail = e.read().decode(errors="replace")[:800]
-        raise SystemExit(f"HTTP {e.code} from {path}: {detail}") from e
+    return _open_json(req, timeout=30, label=path)
 
 
 def web_get(path: str, token: str) -> Any:
@@ -173,13 +260,7 @@ def web_get(path: str, token: str) -> Any:
         f"{CURSOR_WEB}{path}",
         headers={"Cookie": session_cookie(token)},
     )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            raw = resp.read().decode()
-            return json.loads(raw) if raw else {}
-    except urllib.error.HTTPError as e:
-        detail = e.read().decode(errors="replace")[:800]
-        raise SystemExit(f"HTTP {e.code} from {path}: {detail}") from e
+    return _open_json(req, timeout=30, label=path)
 
 
 def web_post(path: str, token: str, payload: dict[str, Any]) -> Any:
@@ -194,13 +275,7 @@ def web_post(path: str, token: str, payload: dict[str, Any]) -> Any:
         },
         method="POST",
     )
-    try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            raw = resp.read().decode()
-            return json.loads(raw) if raw else {}
-    except urllib.error.HTTPError as e:
-        detail = e.read().decode(errors="replace")[:800]
-        raise SystemExit(f"HTTP {e.code} from {path}: {detail}") from e
+    return _open_json(req, timeout=60, label=path)
 
 
 def as_float(n: Any, default: float = 0.0) -> float:
@@ -344,6 +419,85 @@ def fetch_filtered_usage_events(
             break
         page += 1
     return events
+
+
+def _event_ts(event: dict[str, Any]) -> int:
+    try:
+        return int(str(event.get("timestamp") or 0))
+    except ValueError:
+        return 0
+
+
+def _slim_event(event: dict[str, Any]) -> dict[str, Any]:
+    tu = event.get("tokenUsage") or {}
+    return {
+        "timestamp": event.get("timestamp"),
+        "kind": event.get("kind"),
+        "model": event.get("model"),
+        "chargedCents": event.get("chargedCents"),
+        "tokenUsage": {
+            key: tu.get(key)
+            for key in (
+                "inputTokens",
+                "outputTokens",
+                "cacheReadTokens",
+                "cacheWriteTokens",
+                "totalCents",
+            )
+            if key in tu
+        },
+    }
+
+
+class UsageEventCache:
+    """In-memory cache of the current billing cycle's usage events.
+
+    After the first full download, refreshes only re-fetch events newer than
+    ``max timestamp - OVERLAP_MS`` and replace that window, so late cost
+    updates to recent events are still picked up. A periodic full resync and
+    any billing-cycle/user change discard the cache.
+    """
+
+    OVERLAP_MS = 2 * 60 * 60 * 1000
+    FULL_RESYNC_SECONDS = 6 * 60 * 60
+
+    def __init__(self, fetcher: Any = None) -> None:
+        self._fetch = fetcher or fetch_filtered_usage_events
+        self._lock = threading.Lock()
+        self._key: tuple[int, str, str] | None = None
+        self._events: list[dict[str, Any]] = []
+        self._synced_at = 0.0
+
+    def clear(self) -> None:
+        with self._lock:
+            self._key = None
+            self._events = []
+            self._synced_at = 0.0
+
+    def events(self, token: str, user_id: int, start: Any, end: Any) -> list[dict[str, Any]]:
+        key = (int(user_id), str(start), str(end))
+        with self._lock:
+            now = time.monotonic()
+            full = (
+                self._key != key
+                or not self._events
+                or now - self._synced_at >= self.FULL_RESYNC_SECONDS
+            )
+            if full:
+                fresh = self._fetch(token, user_id, start, end)
+                self._events = [_slim_event(e) for e in fresh]
+                self._key = key
+                self._synced_at = now
+            else:
+                newest = max(_event_ts(e) for e in self._events)
+                since = max(int(str(start)), newest - self.OVERLAP_MS)
+                fresh = self._fetch(token, user_id, since, end)
+                kept = [e for e in self._events if _event_ts(e) < since]
+                self._events = kept + [_slim_event(e) for e in fresh]
+            return list(self._events)
+
+
+EVENT_CACHE = UsageEventCache()
 
 
 def aggregate_events_by_bucket(
@@ -585,24 +739,39 @@ def build_summary(
     }
 
 
-def build_report(auth: dict[str, str], token: str) -> dict[str, Any]:
-    period = connect_post(
-        "aiserver.v1.DashboardService/GetCurrentPeriodUsage", token
-    )
-    plan_raw = connect_post("aiserver.v1.DashboardService/GetPlanInfo", token)
-    plan = plan_raw.get("planInfo") or plan_raw
-    try:
-        policy = connect_post(
-            "aiserver.v1.DashboardService/GetUsageLimitPolicyStatus", token
-        )
-    except SystemExit:
-        policy = None
+def _run_parallel(*calls: Any) -> list[Any]:
+    """Run independent HTTP calls concurrently; exceptions are returned, not raised."""
+    from concurrent.futures import ThreadPoolExecutor
 
-    me: dict[str, Any] | None = None
-    try:
-        me = web_get("/api/auth/me", token)
-    except SystemExit as e:
-        sys.stderr.write(f"Warning: /api/auth/me failed: {e}\n")
+    deadline_at = getattr(_deadline, "at", None)
+
+    def wrap(fn: Any) -> Any:
+        _deadline.at = deadline_at
+        try:
+            return fn()
+        except Exception as exc:  # noqa: BLE001 - surfaced to the caller
+            return exc
+
+    with ThreadPoolExecutor(max_workers=len(calls), thread_name_prefix="usage-http") as pool:
+        return list(pool.map(wrap, calls))
+
+
+def build_report(auth: dict[str, str], token: str) -> dict[str, Any]:
+    period, plan_raw, policy, me = _run_parallel(
+        lambda: connect_post("aiserver.v1.DashboardService/GetCurrentPeriodUsage", token),
+        lambda: connect_post("aiserver.v1.DashboardService/GetPlanInfo", token),
+        lambda: connect_post("aiserver.v1.DashboardService/GetUsageLimitPolicyStatus", token),
+        lambda: web_get("/api/auth/me", token),
+    )
+    for required in (period, plan_raw):
+        if isinstance(required, Exception):
+            raise required
+    plan = plan_raw.get("planInfo") or plan_raw
+    if isinstance(policy, Exception):
+        policy = None
+    if isinstance(me, Exception):
+        _warn(f"/api/auth/me failed: {me}")
+        me = None
 
     user_id = as_int((me or {}).get("id"))
     start = period.get("billingCycleStart")
@@ -612,10 +781,11 @@ def build_report(auth: dict[str, str], token: str) -> dict[str, Any]:
     legacy_agg: dict[str, Any] | None = None
     if user_id and start and end:
         try:
-            events = fetch_filtered_usage_events(token, user_id, start, end)
+            events = EVENT_CACHE.events(token, user_id, start, end)
             event_agg = aggregate_events_by_bucket(events)
-        except SystemExit as e:
-            sys.stderr.write(f"Warning: filtered events unavailable: {e}\n")
+        except CursorApiError as e:
+            EVENT_CACHE.clear()
+            _warn(f"filtered events unavailable: {e}")
             try:
                 legacy_agg = web_post(
                     "/api/dashboard/get-aggregated-usage-events",
@@ -627,8 +797,8 @@ def build_report(auth: dict[str, str], token: str) -> dict[str, Any]:
                         "userId": user_id,
                     },
                 )
-            except SystemExit as e2:
-                sys.stderr.write(f"Warning: model aggregation unavailable: {e2}\n")
+            except CursorApiError as e2:
+                _warn(f"model aggregation unavailable: {e2}")
 
     if event_agg:
         on_demand_models = event_agg["onDemandModels"]
@@ -867,5 +1037,8 @@ if __name__ == "__main__":
             except Exception:
                 pass
         raise SystemExit(main())
+    except CursorApiError as exc:
+        print(f"错误: {exc}", file=sys.stderr)
+        raise SystemExit(1)
     except KeyboardInterrupt:
         raise SystemExit(130)

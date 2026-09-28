@@ -77,10 +77,16 @@ def _migrate_legacy_data(target: Path) -> None:
         pass
 
 
+_ready_data_dirs: set[Path] = set()
+
+
 def data_dir() -> Path:
     path = app_root() / "data"
+    if path in _ready_data_dirs:
+        return path
     path.mkdir(parents=True, exist_ok=True)
     _migrate_legacy_data(path)
+    _ready_data_dirs.add(path)
     return path
 
 
@@ -88,13 +94,20 @@ def usage_path() -> Path:
     return data_dir() / "usage.json"
 
 
+def summary_path() -> Path:
+    return data_dir() / "summary.json"
+
+
 def meta_path() -> Path:
     return data_dir() / "meta.json"
 
 
-def _atomic_write(path: Path, payload: dict[str, Any]) -> None:
+def _atomic_write(path: Path, payload: dict[str, Any], *, indent: int | None = 2) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    raw = json.dumps(payload, ensure_ascii=False, indent=2)
+    if indent is None:
+        raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    else:
+        raw = json.dumps(payload, ensure_ascii=False, indent=indent)
     fd, tmp_name = tempfile.mkstemp(prefix=path.stem + ".", suffix=".tmp", dir=str(path.parent))
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
@@ -158,17 +171,94 @@ def read_json(path: Path) -> dict[str, Any] | None:
     return recovered
 
 
+_file_cache: dict[Path, tuple[tuple[int, int], dict[str, Any]]] = {}
+
+
+def _stat_key(path: Path) -> tuple[int, int] | None:
+    try:
+        st = path.stat()
+    except OSError:
+        return None
+    return st.st_mtime_ns, st.st_size
+
+
+def read_json_cached(path: Path) -> dict[str, Any] | None:
+    """Like read_json, but reuse the parsed object while mtime/size are unchanged.
+
+    Callers must treat the returned dict as read-only.
+    """
+    key = _stat_key(path)
+    if key is not None:
+        hit = _file_cache.get(path)
+        if hit is not None and hit[0] == key:
+            return hit[1]
+    data = read_json(path)
+    key = _stat_key(path)
+    if data is not None and key is not None:
+        _file_cache[path] = (key, data)
+    else:
+        _file_cache.pop(path, None)
+    return data
+
+
 def load_usage() -> dict[str, Any] | None:
     with _lock:
-        return read_json(usage_path())
+        return read_json_cached(usage_path())
+
+
+def summary_from_report(report: dict[str, Any]) -> dict[str, Any]:
+    """Small, stable summary shared by the dashboard API and desktop widgets."""
+    summary = report.get("summary") or {}
+    account = report.get("account") or {}
+    plan = report.get("planInfo") or {}
+    individual_used = float(summary.get("individualUsedCents") or 0)
+    individual_limit = float(summary.get("individualLimitCents") or 0)
+    individual_left = float(summary.get("individualRemainingCents") or 0)
+    used_pct = (
+        min(100.0, individual_used / individual_limit * 100.0) if individual_limit > 0 else 0.0
+    )
+    return {
+        "email": account.get("email"),
+        "planName": plan.get("planName"),
+        "unifiedUsedCents": summary.get("unifiedUsedCents"),
+        "individualUsedCents": individual_used,
+        "individualLimitCents": individual_limit,
+        "individualRemainingCents": individual_left,
+        "includedUsedCents": summary.get("includedUsedCents"),
+        "includedLimitCents": summary.get("includedLimitCents"),
+        "includedRemainingCents": summary.get("includedRemainingCents"),
+        "usedPercent": round(used_pct, 1),
+        "topOnDemandModel": summary.get("topOnDemandModel"),
+        "billingCycleStart": summary.get("billingCycleStart"),
+        "billingCycleEnd": summary.get("billingCycleEnd"),
+    }
+
+
+def load_summary() -> dict[str, Any] | None:
+    """Read the widget summary; fall back to deriving it from usage.json."""
+    data = read_json_cached(summary_path())
+    if data is not None:
+        return data
+    report = load_usage()
+    return summary_from_report(report) if report else None
+
+
+def _report_digest(report: dict[str, Any]) -> str:
+    import hashlib
+
+    stable = {k: v for k, v in report.items() if k != "fetchedAt"}
+    raw = json.dumps(stable, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha1(raw.encode("utf-8")).hexdigest()
 
 
 def load_meta() -> dict[str, Any]:
     with _lock:
-        meta = read_json(meta_path()) or {}
+        meta = read_json_cached(meta_path()) or {}
     return {
         "refreshing": bool(meta.get("refreshing")),
         "lastSuccessAt": meta.get("lastSuccessAt"),
+        "fetchedAt": meta.get("fetchedAt"),
+        "usageDigest": meta.get("usageDigest"),
         "lastAttemptAt": meta.get("lastAttemptAt"),
         "lastError": meta.get("lastError"),
         "updatedAt": meta.get("updatedAt"),
@@ -185,10 +275,24 @@ def _write_meta(**fields: Any) -> dict[str, Any]:
         return dict(meta)
 
 
-def save_usage(report: dict[str, Any]) -> None:
+def save_usage(report: dict[str, Any]) -> bool:
+    """Persist a fresh report. Returns False when only fetchedAt changed.
+
+    Unchanged reports skip rewriting usage.json/summary.json; freshness is
+    tracked through meta.lastSuccessAt instead of the file mtime.
+    """
     with _lock:
-        _atomic_write(usage_path(), report)
         meta = read_json(meta_path()) or {}
+        digest = _report_digest(report)
+        previous = read_json_cached(usage_path())
+        changed = digest != meta.get("usageDigest") or previous is None
+        if changed:
+            if previous is not None:
+                _record_cycle_snapshot(previous, report)
+            _atomic_write(usage_path(), report, indent=None)
+            summary = summary_from_report(report)
+            if summary != read_json(summary_path()):
+                _atomic_write(summary_path(), summary, indent=None)
         now = datetime.now(timezone.utc).isoformat()
         meta.update(
             {
@@ -198,9 +302,78 @@ def save_usage(report: dict[str, Any]) -> None:
                 "lastError": None,
                 "updatedAt": now,
                 "dataPath": str(usage_path()),
+                "usageDigest": digest,
+                "fetchedAt": report.get("fetchedAt"),
             }
         )
         _atomic_write(meta_path(), meta)
+        return changed
+
+
+HISTORY_LIMIT = 24
+
+
+def history_path() -> Path:
+    return data_dir() / "history.json"
+
+
+def cycle_snapshot(report: dict[str, Any]) -> dict[str, Any] | None:
+    """Compact per-cycle totals used by the history page."""
+    summary = report.get("summary") or {}
+    start = summary.get("billingCycleStart")
+    if not start:
+        return None
+    models = report.get("models") or []
+    included = float(summary.get("includedUsedCents") or 0)
+    individual = float(summary.get("individualUsedCents") or 0)
+    return {
+        "cycleStart": str(start),
+        "cycleEnd": str(summary.get("billingCycleEnd") or ""),
+        "planName": (report.get("planInfo") or {}).get("planName"),
+        "includedUsedCents": included,
+        "includedLimitCents": float(summary.get("includedLimitCents") or 0),
+        "individualUsedCents": individual,
+        "individualLimitCents": float(summary.get("individualLimitCents") or 0),
+        "totalCents": included + individual,
+        "eventCount": summary.get("eventCount"),
+        "topModels": [
+            {"model": m.get("model"), "costCents": float(m.get("totalCostCents") or 0)}
+            for m in models[:5]
+        ],
+        "capturedAt": report.get("fetchedAt"),
+    }
+
+
+def _record_cycle_snapshot(previous: dict[str, Any], current: dict[str, Any]) -> None:
+    """When the billing cycle rolls over, keep the finished cycle's final numbers."""
+    old = cycle_snapshot(previous)
+    new_start = str((current.get("summary") or {}).get("billingCycleStart") or "")
+    if old is None or not new_start or old["cycleStart"] == new_start:
+        return
+    history = load_history()
+    cycles = [c for c in history.get("cycles", []) if c.get("cycleStart") != old["cycleStart"]]
+    cycles.append(old)
+    cycles.sort(key=lambda c: int(c.get("cycleStart") or 0))
+    _atomic_write(history_path(), {"cycles": cycles[-HISTORY_LIMIT:]}, indent=None)
+
+
+def load_history() -> dict[str, Any]:
+    data = read_json(history_path()) or {}
+    cycles = data.get("cycles")
+    return {"cycles": cycles if isinstance(cycles, list) else []}
+
+
+def alerts_state_path() -> Path:
+    return data_dir() / "alerts.json"
+
+
+def load_alerts_state() -> dict[str, Any]:
+    return read_json(alerts_state_path()) or {}
+
+
+def save_alerts_state(state: dict[str, Any]) -> None:
+    with _lock:
+        _atomic_write(alerts_state_path(), state, indent=None)
 
 
 def mark_refreshing(active: bool, error: str | None = None) -> None:
@@ -264,6 +437,14 @@ def age_seconds() -> float | None:
     path = usage_path()
     if not path.is_file():
         return None
+    meta = read_json_cached(meta_path()) or {}
+    last = meta.get("lastSuccessAt")
+    if last:
+        try:
+            ts = datetime.fromisoformat(str(last)).timestamp()
+            return max(0.0, time.time() - ts)
+        except ValueError:
+            pass
     try:
         return max(0.0, time.time() - path.stat().st_mtime)
     except OSError:
@@ -289,6 +470,9 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "windowFullscreen": False,
     # auto = local Cursor session; manual = credentials.json
     "authSource": "auto",
+    # Refresh an expired local Cursor token and write it back to state.vscdb.
+    # Off by default: a rotating refresh token could otherwise sign Cursor out.
+    "persistLocalRefresh": False,
     "launchAtStartup": False,
     # Start in tray without opening dashboard
     "startHidden": True,
@@ -303,7 +487,13 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "ballRingWidth": 7,
     "dockWidth": 220,
     "dockCompact": False,
+    "lastView": "home",
+    "alertsEnabled": True,
+    # Off by default: contacting GitHub is the only non-Cursor network request.
+    "checkUpdates": False,
 }
+
+DASHBOARD_VIEWS = ("home", "ondemand", "included", "daily", "models", "history", "settings")
 
 
 def _migrate_settings(raw: dict[str, Any]) -> tuple[dict[str, Any], bool]:
@@ -410,6 +600,13 @@ def _normalize_settings(raw: dict[str, Any]) -> dict[str, Any]:
     if "authSource" in raw:
         src = str(raw["authSource"] or "auto").lower()
         out["authSource"] = "manual" if src == "manual" else "auto"
+    if raw.get("lastView") in DASHBOARD_VIEWS:
+        out["lastView"] = raw["lastView"]
+    for key in ("alertsEnabled", "checkUpdates"):
+        if key in raw:
+            out[key] = bool(raw[key])
+    if "persistLocalRefresh" in raw:
+        out["persistLocalRefresh"] = bool(raw["persistLocalRefresh"])
     if "launchAtStartup" in raw:
         out["launchAtStartup"] = bool(raw["launchAtStartup"])
     if "startHidden" in raw:
@@ -463,9 +660,85 @@ def credentials_path() -> Path:
     return data_dir() / "credentials.json"
 
 
+_CRED_FIELDS = ("accessToken", "refreshToken", "email")
+
+
+def _dpapi(data: bytes, *, protect: bool) -> bytes | None:
+    """Encrypt/decrypt with Windows DPAPI (current user scope). None if unavailable."""
+    if sys.platform != "win32":
+        return None
+    import ctypes
+    from ctypes import wintypes
+
+    class DATA_BLOB(ctypes.Structure):
+        _fields_ = [("cbData", wintypes.DWORD), ("pbData", ctypes.POINTER(ctypes.c_char))]
+
+    crypt32 = ctypes.WinDLL("crypt32", use_last_error=True)
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.LocalFree.argtypes = [ctypes.c_void_p]
+    buffer = ctypes.create_string_buffer(data, len(data))
+    blob_in = DATA_BLOB(len(data), ctypes.cast(buffer, ctypes.POINTER(ctypes.c_char)))
+    blob_out = DATA_BLOB()
+    CRYPTPROTECT_UI_FORBIDDEN = 0x1
+    fn = crypt32.CryptProtectData if protect else crypt32.CryptUnprotectData
+    ok = fn(
+        ctypes.byref(blob_in),
+        None,
+        None,
+        None,
+        None,
+        CRYPTPROTECT_UI_FORBIDDEN,
+        ctypes.byref(blob_out),
+    )
+    if not ok:
+        return None
+    try:
+        return ctypes.string_at(blob_out.pbData, blob_out.cbData)
+    finally:
+        kernel32.LocalFree(ctypes.cast(blob_out.pbData, ctypes.c_void_p))
+
+
+def _decode_credentials(raw: dict[str, Any]) -> dict[str, Any]:
+    """Accept the DPAPI format ({"protected": base64}) and legacy plaintext."""
+    import base64
+
+    protected = raw.get("protected")
+    if not protected:
+        return raw
+    try:
+        plain = _dpapi(base64.b64decode(protected), protect=False)
+        secrets = json.loads(plain.decode("utf-8")) if plain else {}
+    except (ValueError, UnicodeError):
+        secrets = {}
+    return {**secrets, "updatedAt": raw.get("updatedAt")}
+
+
+def _encode_credentials(values: dict[str, Any]) -> dict[str, Any]:
+    import base64
+
+    secrets = {k: values.get(k, "") for k in _CRED_FIELDS}
+    sealed = _dpapi(json.dumps(secrets).encode("utf-8"), protect=True)
+    if sealed is None:
+        # Non-Windows development fallback.
+        return {**secrets, "updatedAt": values.get("updatedAt")}
+    return {
+        "format": "dpapi-v1",
+        "protected": base64.b64encode(sealed).decode("ascii"),
+        "updatedAt": values.get("updatedAt"),
+    }
+
+
 def load_credentials() -> dict[str, Any]:
     with _lock:
-        raw = read_json(credentials_path()) or {}
+        stored = read_json(credentials_path()) or {}
+        raw = _decode_credentials(stored)
+        if stored and not stored.get("protected") and sys.platform == "win32":
+            # Migrate legacy plaintext credentials in place.
+            try:
+                _atomic_write(credentials_path(), _encode_credentials(raw))
+                _remove_backup(credentials_path())
+            except OSError:
+                pass
     return {
         "accessToken": str(raw.get("accessToken") or "").strip(),
         "refreshToken": str(raw.get("refreshToken") or "").strip(),
@@ -474,14 +747,25 @@ def load_credentials() -> dict[str, Any]:
     }
 
 
+def _remove_backup(path: Path) -> None:
+    """Drop the .bak copy so a plaintext generation does not linger on disk."""
+    try:
+        path.with_suffix(path.suffix + ".bak").unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 def save_credentials(patch: dict[str, Any]) -> dict[str, Any]:
     with _lock:
-        cur = read_json(credentials_path()) or {}
-        for key in ("accessToken", "refreshToken", "email"):
+        stored = read_json(credentials_path()) or {}
+        cur = _decode_credentials(stored)
+        for key in _CRED_FIELDS:
             if key in patch and patch[key] is not None:
                 cur[key] = str(patch[key]).strip()
         cur["updatedAt"] = datetime.now(timezone.utc).isoformat()
-        _atomic_write(credentials_path(), cur)
+        _atomic_write(credentials_path(), _encode_credentials(cur))
+        if stored and not stored.get("protected"):
+            _remove_backup(credentials_path())
         return {
             "accessToken": str(cur.get("accessToken") or "").strip(),
             "refreshToken": str(cur.get("refreshToken") or "").strip(),
@@ -497,6 +781,7 @@ def clear_credentials() -> None:
             path.unlink(missing_ok=True)
         except OSError:
             pass
+        _remove_backup(path)
 
 
 def credentials_public_info() -> dict[str, Any]:

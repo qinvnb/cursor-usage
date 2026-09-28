@@ -70,11 +70,18 @@ ID_SHOW = 1001
 ID_REFRESH = 1002
 ID_CLOSE = 1003
 TIMER_MAINTENANCE = 1
+TIMER_INTERVAL_MS = 2000
 POLL_SECONDS = 4.0
+LAYOUT_CHECK_SECONDS = 30.0
+UIA_CACHE_SECONDS = 30.0
 MAX_RETRY_SECONDS = 60.0
+WM_APP_UIA_READY = 0x8000 + 1
 _UIA_LOCK = threading.Lock()
 _UIA_CACHE: tuple[int, float, list[dict[str, Any]], str | None] | None = None
 _UIA_WORKER: threading.Thread | None = None
+_UIA_NOTIFY_HWND = 0
+_LAST_STATUS: dict[str, Any] | None = None
+_SETTINGS_CACHE: dict[str, Any] | None = None
 
 
 if IS_WINDOWS:
@@ -206,6 +213,13 @@ if IS_WINDOWS:
         wintypes.UINT,
     ]
     user32.SetWindowRgn.argtypes = [wintypes.HWND, wintypes.HRGN, wintypes.BOOL]
+    user32.PostMessageW.argtypes = [
+        wintypes.HWND,
+        wintypes.UINT,
+        wintypes.WPARAM,
+        wintypes.LPARAM,
+    ]
+    user32.KillTimer.argtypes = [wintypes.HWND, ctypes.c_size_t]
     user32.InvalidateRect.argtypes = [
         wintypes.HWND,
         ctypes.POINTER(wintypes.RECT),
@@ -341,6 +355,11 @@ def _atomic_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def _write_component_status(fields: dict[str, Any]) -> None:
+    global _LAST_STATUS
+    if _LAST_STATUS is not None and all(
+        _LAST_STATUS.get(key) == value for key, value in fields.items()
+    ):
+        return
     try:
         store = _store_module()
         path = Path(store.data_dir()) / "component_status.json"
@@ -357,9 +376,21 @@ def _write_component_status(fields: dict[str, Any]) -> None:
         status["updatedAt"] = _utc_now()
         current["taskbarWidget"] = status
         _atomic_json(path, current)
+        _LAST_STATUS = status
     except Exception:
         # Status reporting must never take down the widget.
         pass
+
+
+def _widget_settings() -> dict[str, Any]:
+    """Settings are read once; the main process restarts the widget on style changes."""
+    global _SETTINGS_CACHE
+    if _SETTINGS_CACHE is None:
+        try:
+            _SETTINGS_CACHE = dict(_store_module().load_settings())
+        except Exception:
+            return {}
+    return _SETTINGS_CACHE
 
 
 def _windows_version() -> dict[str, Any]:
@@ -467,33 +498,43 @@ def _uia_taskbar_elements_sync(taskbar: int) -> tuple[list[dict[str, Any]], str 
         return [], f"uia-unavailable:{type(exc).__name__}"
 
 
-def _uia_taskbar_elements(taskbar: int) -> tuple[list[dict[str, Any]], str | None]:
-    """Return cached UIA geometry without allowing Explorer COM to block UI."""
-    global _UIA_CACHE, _UIA_WORKER
+def _uia_taskbar_elements(
+    taskbar: int, *, max_age: float = UIA_CACHE_SECONDS
+) -> tuple[list[dict[str, Any]], str | None]:
+    """Return cached UIA geometry; refresh in the background, never blocking.
+
+    When a refresh completes, ``WM_APP_UIA_READY`` is posted to
+    ``_UIA_NOTIFY_HWND`` so the widget can re-evaluate its layout.
+    """
+    global _UIA_WORKER
     now = time.monotonic()
     with _UIA_LOCK:
         stale = _UIA_CACHE if _UIA_CACHE and _UIA_CACHE[0] == taskbar else None
-        if stale and now - stale[1] < 30:
+        if stale and now - stale[1] < max_age:
             return list(stale[2]), stale[3]
-        if _UIA_WORKER is not None and _UIA_WORKER.is_alive():
-            return (list(stale[2]), stale[3]) if stale else ([], "uia-pending")
+        if _UIA_WORKER is None or not _UIA_WORKER.is_alive():
 
-        def collect() -> None:
-            global _UIA_CACHE, _UIA_WORKER
-            elements, error = _uia_taskbar_elements_sync(taskbar)
-            with _UIA_LOCK:
-                _UIA_CACHE = (taskbar, time.monotonic(), elements, error)
-                _UIA_WORKER = None
+            def collect() -> None:
+                global _UIA_CACHE, _UIA_WORKER
+                elements, error = _uia_taskbar_elements_sync(taskbar)
+                with _UIA_LOCK:
+                    previous = _UIA_CACHE
+                    _UIA_CACHE = (taskbar, time.monotonic(), elements, error)
+                    _UIA_WORKER = None
+                    notify = _UIA_NOTIFY_HWND
+                changed = (
+                    previous is None
+                    or previous[0] != taskbar
+                    or previous[2] != elements
+                    or previous[3] != error
+                )
+                if notify and changed and IS_WINDOWS:
+                    user32.PostMessageW(notify, WM_APP_UIA_READY, 0, 0)
 
-        worker = threading.Thread(
-            target=collect, daemon=True, name="taskbar-uia-geometry"
-        )
-        _UIA_WORKER = worker
-        worker.start()
-    worker.join(2.0)
-    with _UIA_LOCK:
-        if _UIA_CACHE and _UIA_CACHE[0] == taskbar:
-            return list(_UIA_CACHE[2]), _UIA_CACHE[3]
+            _UIA_WORKER = threading.Thread(
+                target=collect, daemon=True, name="taskbar-uia-geometry"
+            )
+            _UIA_WORKER.start()
         if stale:
             return list(stale[2]), stale[3]
     return [], "uia-pending"
@@ -551,10 +592,7 @@ def _embedding_layout(
     if tray_width <= tray_height * 4 or tray_height > int(96 * scale):
         return None, "vertical-or-nonstandard-taskbar"
     margin = max(6, round(10 * scale))
-    try:
-        settings = _store_module().load_settings()
-    except Exception:
-        settings = {}
+    settings = _widget_settings()
     requested_width = int(settings.get("dockWidth") or 220)
     compact = bool(settings.get("dockCompact"))
     width = round(max(150 if compact else 172, min(420, requested_width)) * scale)
@@ -598,6 +636,10 @@ def probe() -> dict[str, Any]:
     taskbar = int(user32.FindWindowW("Shell_TrayWnd", None) or 0)
     tray_rect = _rect(taskbar)
     uia_elements, uia_error = _uia_taskbar_elements(taskbar)
+    deadline = time.monotonic() + 5.0
+    while uia_error == "uia-pending" and time.monotonic() < deadline:
+        time.sleep(0.1)
+        uia_elements, uia_error = _uia_taskbar_elements(taskbar)
     layout, reason = _embedding_layout(taskbar)
     return {
         "taskbarHwnd": taskbar,
@@ -641,6 +683,14 @@ def probe() -> dict[str, Any]:
 def _summary_from_report(report: dict[str, Any] | None) -> tuple[float, float] | None:
     if not isinstance(report, dict):
         return None
+    if "individualUsedCents" in report:
+        try:
+            return (
+                float(report.get("individualUsedCents") or 0),
+                float(report.get("individualLimitCents") or 0),
+            )
+        except (TypeError, ValueError):
+            return None
     summary = report.get("summary")
     if isinstance(summary, dict):
         try:
@@ -693,6 +743,8 @@ class TaskbarWidget:
         self.retry_seconds = 1.0
         self.next_retry_at = 0.0
         self.next_poll_at = 0.0
+        self.next_layout_at = 0.0
+        self.layout: dict[str, int] | None = None
         self.usage: tuple[float, float] | None = None
         self.reason = "starting"
         self.app_icon = 0
@@ -735,11 +787,14 @@ class TaskbarWidget:
         )
         if not self.controller_hwnd:
             raise ctypes.WinError(ctypes.get_last_error())
-        user32.SetTimer(self.controller_hwnd, TIMER_MAINTENANCE, 1000, None)
+        global _UIA_NOTIFY_HWND
+        _UIA_NOTIFY_HWND = self.controller_hwnd
+        user32.SetTimer(self.controller_hwnd, TIMER_MAINTENANCE, TIMER_INTERVAL_MS, None)
 
     def _destroy_widget(self) -> None:
         hwnd, self.widget_hwnd = self.widget_hwnd, 0
         self.visible = False
+        self.layout = None
         if hwnd and user32.IsWindow(hwnd):
             try:
                 user32.DestroyWindow(hwnd)
@@ -754,6 +809,10 @@ class TaskbarWidget:
         if retry:
             self.next_retry_at = time.monotonic() + self.retry_seconds
             self.retry_seconds = min(MAX_RETRY_SECONDS, self.retry_seconds * 2.0)
+        else:
+            # Fullscreen / no free space: re-check at the normal poll cadence
+            # instead of on every maintenance tick.
+            self.next_retry_at = time.monotonic() + POLL_SECONDS
         _write_component_status(
             {
                 "state": "retrying" if retry else "hidden",
@@ -765,16 +824,21 @@ class TaskbarWidget:
             }
         )
 
-    def _attach(self, *, force: bool = False) -> bool:
-        taskbar = int(user32.FindWindowW("Shell_TrayWnd", None) or 0)
+    def _fullscreen(self) -> bool:
         try:
             from .win_ui import is_fullscreen_session
 
-            if is_fullscreen_session():
-                self._hide("fullscreen", retry=False)
-                return False
+            return is_fullscreen_session()
         except Exception:
-            pass
+            return False
+
+    def _attach(self, *, force: bool = False) -> bool:
+        """Compute the layout and apply it only when something actually changed."""
+        self.next_layout_at = time.monotonic() + LAYOUT_CHECK_SECONDS
+        taskbar = int(user32.FindWindowW("Shell_TrayWnd", None) or 0)
+        if self._fullscreen():
+            self._hide("fullscreen", retry=False)
+            return False
         current_rect = _rect(self.widget_hwnd) if self.widget_hwnd else None
         layout, reason = _embedding_layout(taskbar, ignore_rect=current_rect)
         if not layout:
@@ -786,6 +850,13 @@ class TaskbarWidget:
         if force or taskbar != self.taskbar_hwnd:
             self._destroy_widget()
         self.taskbar_hwnd = taskbar
+        if (
+            self.visible
+            and layout == self.layout
+            and self.widget_hwnd
+            and user32.IsWindow(self.widget_hwnd)
+        ):
+            return True
         taskbar_rect = _rect(taskbar)
         if not taskbar_rect:
             self._hide("taskbar-rect-unavailable", retry=True)
@@ -835,6 +906,7 @@ class TaskbarWidget:
             gdi32.DeleteObject(region)
         user32.ShowWindow(self.widget_hwnd, SW_SHOWNA)
         user32.InvalidateRect(self.widget_hwnd, None, False)
+        self.layout = dict(layout)
         self.visible = True
         self.reason = "ok"
         self.retry_seconds = 1.0
@@ -855,11 +927,29 @@ class TaskbarWidget:
 
     def _load_usage(self) -> None:
         try:
-            self.usage = _summary_from_report(_store_module().load_usage())
+            usage = _summary_from_report(_store_module().load_summary())
         except Exception:
-            self.usage = None
+            usage = None
+        if usage == self.usage:
+            return
+        self.usage = usage
         if self.widget_hwnd and user32.IsWindow(self.widget_hwnd):
             user32.InvalidateRect(self.widget_hwnd, None, False)
+
+    def _poll_visible(self) -> None:
+        """Cheap periodic check while embedded: fullscreen + periodic layout."""
+        if self._fullscreen():
+            self._hide("fullscreen", retry=False)
+            return
+        if time.monotonic() >= self.next_layout_at:
+            self._attach()
+            return
+        try:
+            from .win_ui import keep_topmost
+
+            keep_topmost(self.widget_hwnd)
+        except Exception:
+            pass
 
     def _maintenance(self) -> None:
         now = time.monotonic()
@@ -876,7 +966,7 @@ class TaskbarWidget:
         if now >= self.next_poll_at:
             self.next_poll_at = now + self.refresh_seconds
             if self.visible:
-                self._attach()
+                self._poll_visible()
             self._load_usage()
 
     def _write_command(self, action: str) -> None:
@@ -1123,13 +1213,20 @@ class TaskbarWidget:
                 self.next_retry_at = 0.0
                 self._attach(force=True)
                 return 0
+            if msg == WM_APP_UIA_READY and hwnd == self.controller_hwnd:
+                self._attach()
+                return 0
             if msg == WM_DPICHANGED and hwnd == self.widget_hwnd:
                 self._attach()
                 return 0
             if msg in (WM_DPICHANGED, WM_DISPLAYCHANGE, WM_SETTINGCHANGE) and (
                 hwnd == self.controller_hwnd
             ):
-                self._attach(force=True)
+                # Geometry may have changed: refresh UIA in the background and
+                # re-layout now with cached data; WM_APP_UIA_READY follows.
+                if self.taskbar_hwnd:
+                    _uia_taskbar_elements(self.taskbar_hwnd, max_age=0.0)
+                self._attach(force=msg == WM_DPICHANGED)
                 return 0
             if msg == WM_TIMER and hwnd == self.controller_hwnd:
                 self._maintenance()

@@ -14,13 +14,17 @@ Windows 11 本地桌面看板，读取当前电脑的 Cursor 登录状态，展�
 
 ## 功能
 
-- 首页、个人按需、套餐内、日期和模型多维分析
-- 本地 Chart.js 图表，无 CDN 依赖
+- 首页、个人按需、套餐内、日期、模型和历史周期多维分析
+- 本地 Chart.js 图表，无 CDN 依赖；跟随系统的深色模式
+- 表格点击排序、导出 CSV；记住上次打开的页面
 - 悬浮球与 Windows 11 主屏任务栏组件
-- 系统托盘、开机启动、后台定时刷新
+- 系统托盘（用量进度环、菜单内显示已用/剩余）、开机启动、后台定时刷新
+- 额度预警通知：达到 80% / 95%，或按当前节奏 3 天内将用完时提醒
 - 单实例 IPC、组件异常重启与 Explorer 重启恢复
 - 设置备份恢复、7 天脱敏日志和诊断包导出
-- 支持本机 Cursor 登录、环境变量或手动 Session Token
+- 支持本机 Cursor 登录、环境变量或手动 Session Token（DPAPI 加密保存）
+- 低资源占用：事件驱动的组件、增量拉取用量事件、数据未变化时不写盘，
+  看板隐藏到托盘后暂停轮询
 
 ## 环境要求
 
@@ -32,7 +36,7 @@ Windows 11 本地桌面看板，读取当前电脑的 Cursor 登录状态，展�
 
 ## 直接使用
 
-1. 从 GitHub Releases 下载 `CursorUsage-v1.0.0-win-x64.zip`。
+1. 从 GitHub Releases 下载最新的 `CursorUsage-v<版本>-win-x64.zip`。
 2. 解压完整文件夹，不要只复制 EXE。
 3. 运行 `CursorUsage.exe`；应用默认从托盘启动。
 4. 从托盘选择“显示看板”或“立即刷新”。
@@ -43,8 +47,8 @@ Windows 11 本地桌面看板，读取当前电脑的 Cursor 登录状态，展�
 ## 从源码运行
 
 ```powershell
-git clone <your-repository-url>
-cd cursor-usage-app
+git clone https://github.com/qinvnb/cursor-usage.git
+cd cursor-usage
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
@@ -79,7 +83,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_exe.ps1
 创建不包含本机数据的 GitHub Release 压缩包：
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\package_release.ps1 -Version 1.0.0
+powershell -ExecutionPolicy Bypass -File .\scripts\package_release.ps1 -Version 1.1.0
 ```
 
 发布前请确认压缩包内不存在 `data\`。
@@ -92,23 +96,40 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package_release.ps1 -Version 
 可能包含：
 
 - `usage.json`：账号用量、邮箱和模型汇总
-- `credentials.json`：手动输入的访问/刷新令牌（明文，仅限当前文件系统权限）
+- `summary.json`：供悬浮球、任务栏组件读取的精简摘要（含邮箱）
+- `history.json`：已结束计费周期的合计快照（最多 24 个）
+- `alerts.json`：本周期已发送过的预警，避免重复提醒
+- `credentials.json`：手动输入的访问/刷新令牌，使用 Windows DPAPI 按当前用户加密；
+  旧版明文文件会在首次读取时自动迁移
 - `settings.json`：应用设置
+- `exports\`：从看板导出的 CSV
 - `logs\`：最长保留 7 天的脱敏日志
 
-不要提交、上传或随发行包分发 `data\`。手动令牌仅应在可信电脑上使用。详细说明见
-[SECURITY.md](SECURITY.md)。
+不要提交、上传或随发行包分发 `data\`（已被 `.gitignore` 排除）。手动令牌仅应在可信
+电脑上使用。详细说明见 [SECURITY.md](SECURITY.md)。
 
-使用本机登录状态时，应用会读取 Cursor 的 `state.vscdb`；访问令牌过期且刷新成功后，
-可能把新令牌写回该数据库，以保持 Cursor 与看板的登录状态一致。
+使用本机登录状态时，应用只读取 Cursor 的 `state.vscdb`。本机令牌过期时默认**不会**
+自行刷新（Cursor 运行时会自己续期），以免刷新令牌轮换导致 Cursor 被登出；如需由本工具
+刷新并写回，可在设置中开启“令牌过期时由本工具刷新并写回 Cursor”。
 
 程序只监听随机端口的 `127.0.0.1`，不会主动将统计数据发送给第三方；网络请求用于访问
-Cursor 服务。诊断包不会主动包含凭证、Cookie、Token 或完整用量事件，但分享前仍应检查。
+Cursor 服务。可选的“检查更新”（默认关闭）每天最多访问一次 GitHub Releases，不上传任何
+用量数据。诊断包不会主动包含凭证、Cookie、Token 或完整用量事件，但分享前仍应检查。
+
+刷新连续失败时会自动退避（30 秒起，最长 15 分钟），看板状态栏会显示下次重试时间；
+手动点击“刷新数据”不受退避限制。
 
 ## 测试
 
 ```powershell
 python -m unittest discover -s tests -p "test_*.py"
+$env:TZ = "Asia/Shanghai"; node tests/web/daily.test.cjs   # 看板日期统计（需 Node.js）
+```
+
+资源占用可用下面的脚本测量（应用运行时执行，统计所有子进程的 CPU 与写盘次数）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\measure_cpu.ps1 -Seconds 300
 ```
 
 ## 项目结构

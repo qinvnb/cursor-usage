@@ -12,15 +12,19 @@ from typing import Any
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from .win_ui import (
+    LayeredBitmap,
     clamp_to_virtual,
     clear_topmost,
     default_ball_position,
     hwnd_of,
+    install_foreground_hook,
     install_rbutton_hook,
     is_fullscreen_session,
     keep_topmost,
     paint_layered,
 )
+
+FULLSCREEN_FALLBACK_MS = 2000
 
 
 def _enable_dpi() -> float:
@@ -157,10 +161,8 @@ def apply_opacity(img: Image.Image, opacity: float) -> Image.Image:
 class FloatingBall:
     def __init__(self, refresh_ms: int = 4000) -> None:
         from . import store
-        from .server import summary_from_report
 
         self.store = store
-        self.summary_from_report = summary_from_report
         self.scale = _enable_dpi()
         settings = store.load_settings()
         base_size = int(settings.get("ballSize") or 120)
@@ -170,6 +172,9 @@ class FloatingBall:
         self.font_size = max(8, min(28, int(settings.get("ballFontSize") or 14)))
         self.ring_width = max(3, min(18, int(settings.get("ballRingWidth") or 7)))
         self._img: Image.Image | None = None
+        self._bitmap: LayeredBitmap | None = None
+        self._summary_key: tuple[Any, ...] | None = None
+        self._fs_check_pending = False
         self._x, self._y = self._initial_pos()
 
         self.root = tk.Tk()
@@ -211,8 +216,12 @@ class FloatingBall:
             install_rbutton_hook(hwnd_of(self.root), self._popup_at)
         except Exception:
             pass
+        # Foreground changes (app switch, video going fullscreen via a new
+        # window) trigger an immediate check; a slow timer covers in-place
+        # fullscreen toggles that do not change the foreground window.
+        install_foreground_hook(self._schedule_fs_check)
         self._tick()
-        self.root.after(500, self._keep_alive)
+        self.root.after(FULLSCREEN_FALLBACK_MS, self._keep_alive)
 
     def _initial_pos(self) -> tuple[int, int]:
         settings = self.store.load_settings()
@@ -239,12 +248,9 @@ class FloatingBall:
         if self._img is None or self._hidden_fs or self._menu_open:
             return
         try:
-            paint_layered(
-                hwnd_of(self.root),
-                apply_opacity(self._img, self.opacity),
-                self._x,
-                self._y,
-            )
+            if self._bitmap is None:
+                self._bitmap = LayeredBitmap(apply_opacity(self._img, self.opacity))
+            paint_layered(hwnd_of(self.root), self._bitmap, self._x, self._y)
         except Exception:
             pass
 
@@ -274,10 +280,10 @@ class FloatingBall:
         except Exception:
             pass
 
-    def _keep_alive(self) -> None:
+    def _check_fullscreen(self) -> None:
         # Nested event loop during tk_popup still fires this — never raise while menu open.
+        self._fs_check_pending = False
         if self._menu_open:
-            self.root.after(250, self._keep_alive)
             return
         try:
             fs = is_fullscreen_session()
@@ -288,7 +294,20 @@ class FloatingBall:
                 self._topmost_on = True
         except Exception:
             pass
-        self.root.after(250, self._keep_alive)
+
+    def _schedule_fs_check(self) -> None:
+        if self._fs_check_pending:
+            return
+        self._fs_check_pending = True
+        try:
+            # Let the new foreground window settle into its final geometry.
+            self.root.after(150, self._check_fullscreen)
+        except Exception:
+            self._fs_check_pending = False
+
+    def _keep_alive(self) -> None:
+        self._check_fullscreen()
+        self.root.after(FULLSCREEN_FALLBACK_MS, self._keep_alive)
 
     def _on_press(self, event: tk.Event) -> None:  # type: ignore[type-arg]
         self._drag_x = event.x_root
@@ -378,11 +397,8 @@ class FloatingBall:
         self.root.after(50, self.root.destroy)
 
     def _load_summary(self) -> dict[str, Any] | None:
-        report = self.store.load_usage()
-        if not report:
-            return None
         try:
-            return self.summary_from_report(report)
+            return self.store.load_summary()
         except Exception:
             return None
 
@@ -394,11 +410,30 @@ class FloatingBall:
             font_size=self.font_size,
             ring_width=self.ring_width,
         )
+        self._bitmap = None
         self._paint()
 
     def _tick(self) -> None:
         if not self._hidden_fs and not self._menu_open:
-            self._draw(self._load_summary())
+            summary = self._load_summary()
+            # render_ball only depends on these two values; skip the expensive
+            # supersampled redraw when neither changed.
+            key = (
+                None
+                if summary is None
+                else (
+                    _usd(summary.get("individualUsedCents") or 0),
+                    _usd(summary.get("individualLimitCents") or 0),
+                    round(
+                        float(summary.get("individualUsedCents") or 0)
+                        / max(1.0, float(summary.get("individualLimitCents") or 0)),
+                        3,
+                    ),
+                )
+            )
+            if key != self._summary_key or self._img is None:
+                self._summary_key = key
+                self._draw(summary)
         self.root.after(self.refresh_ms, self._tick)
 
     def run(self) -> None:

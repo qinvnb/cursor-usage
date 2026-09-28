@@ -105,6 +105,66 @@ def install_rbutton_hook(hwnd: int, on_right: Any) -> None:
         pass
 
 
+def install_foreground_hook(on_change: Any) -> bool:
+    """Call on_change() whenever the foreground window changes.
+
+    Uses an out-of-context WinEvent hook, which is delivered through the
+    calling thread's message loop (Tk's mainloop pumps it), so no polling
+    thread is needed. Returns False when the hook cannot be installed.
+    """
+    if sys.platform != "win32":
+        return False
+    try:
+        user32 = ctypes.windll.user32
+        EVENT_SYSTEM_FOREGROUND = 0x0003
+        WINEVENT_OUTOFCONTEXT = 0x0000
+        WINEVENT_SKIPOWNPROCESS = 0x0002
+
+        WINEVENTPROC = ctypes.WINFUNCTYPE(
+            None,
+            ctypes.c_void_p,
+            DWORD,
+            HWND,
+            LONG,
+            LONG,
+            DWORD,
+            DWORD,
+        )
+
+        def _proc(_hook, _event, _hwnd, _obj, _child, _thread, _time):  # type: ignore[no-untyped-def]
+            try:
+                on_change()
+            except Exception:
+                pass
+
+        callback = WINEVENTPROC(_proc)
+        user32.SetWinEventHook.restype = ctypes.c_void_p
+        user32.SetWinEventHook.argtypes = [
+            DWORD,
+            DWORD,
+            ctypes.c_void_p,
+            WINEVENTPROC,
+            DWORD,
+            DWORD,
+            DWORD,
+        ]
+        hook = user32.SetWinEventHook(
+            EVENT_SYSTEM_FOREGROUND,
+            EVENT_SYSTEM_FOREGROUND,
+            None,
+            callback,
+            0,
+            0,
+            WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS,
+        )
+        if not hook:
+            return False
+        _subclass_refs.append((callback, on_change, hook))
+        return True
+    except Exception:
+        return False
+
+
 def virtual_screen() -> tuple[int, int, int, int]:
     """Full virtual desktop across all monitors: (left, top, right, bottom)."""
     if sys.platform == "win32":
@@ -212,31 +272,32 @@ def ensure_overlay_visible(hwnd: int) -> None:
         pass
 
 
-def _premultiply_bgra(raw: bytes, width: int, height: int) -> bytes:
-    """Windows layered windows expect premultiplied BGRA."""
-    arr = bytearray(raw)
-    for i in range(0, len(arr), 4):
-        a = arr[i + 3]
-        if a == 255:
-            continue
-        if a == 0:
-            arr[i] = arr[i + 1] = arr[i + 2] = 0
-            continue
-        arr[i] = (arr[i] * a) // 255
-        arr[i + 1] = (arr[i + 1] * a) // 255
-        arr[i + 2] = (arr[i + 2] * a) // 255
-    return bytes(arr)
+class LayeredBitmap:
+    """Premultiplied bottom-up BGRA pixels, prepared once and reused on every paint."""
+
+    __slots__ = ("width", "height", "raw")
+
+    def __init__(self, image: Image.Image) -> None:
+        from PIL import ImageChops
+
+        rgba = image.convert("RGBA")
+        r, g, b, a = rgba.split()
+        premultiplied = Image.merge(
+            "RGBA",
+            (ImageChops.multiply(r, a), ImageChops.multiply(g, a), ImageChops.multiply(b, a), a),
+        )
+        self.width, self.height = premultiplied.size
+        self.raw = premultiplied.transpose(Image.Transpose.FLIP_TOP_BOTTOM).tobytes("raw", "BGRA")
 
 
-def paint_layered(hwnd: int, image: Image.Image, x: int, y: int) -> None:
+def paint_layered(hwnd: int, image: Image.Image | LayeredBitmap, x: int, y: int) -> None:
     """Draw an RGBA image onto a layered window with per-pixel alpha (smooth edges)."""
     if sys.platform != "win32":
         return
 
-    rgba = image.convert("RGBA")
-    w, h = rgba.size
-    raw = rgba.transpose(Image.Transpose.FLIP_TOP_BOTTOM).tobytes("raw", "BGRA")
-    raw = _premultiply_bgra(raw, w, h)
+    bitmap = image if isinstance(image, LayeredBitmap) else LayeredBitmap(image)
+    w, h = bitmap.width, bitmap.height
+    raw = bitmap.raw
 
     user32 = ctypes.windll.user32
     gdi32 = ctypes.windll.gdi32

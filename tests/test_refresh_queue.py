@@ -20,6 +20,8 @@ class RefreshQueueTests(unittest.TestCase):
             server._refresh_error = None
             server._refresh_generation = 0
             server._refresh_completed_generation = 0
+            server._consecutive_failures = 0
+            server._next_auto_refresh_at = 0.0
 
         self.temp_dir = tempfile.TemporaryDirectory()
         data_dir = Path(self.temp_dir.name)
@@ -136,6 +138,21 @@ class RefreshQueueTests(unittest.TestCase):
         self.assertEqual(merged["onDemandModels"], cached["onDemandModels"])
         self.assertEqual(merged["includedModels"], cached["includedModels"])
 
+    def test_lightweight_merge_keeps_event_derived_fields(self) -> None:
+        cached = {
+            "account": {"email": "a@b.c", "userId": 7, "authSource": "local"},
+            "summary": {"individualUsedCents": 10, "eventCount": 42, "topOnDemandModel": "claude"},
+        }
+        fresh = {
+            "account": {"email": "a@b.c", "membershipType": None, "authSource": "local"},
+            "summary": {"individualUsedCents": 20, "eventCount": None, "topOnDemandModel": None},
+        }
+        merged = server._merge_lightweight_report(cached, fresh)
+        self.assertEqual(merged["account"]["userId"], 7)
+        self.assertEqual(merged["summary"]["individualUsedCents"], 20)
+        self.assertEqual(merged["summary"]["eventCount"], 42)
+        self.assertEqual(merged["summary"]["topOnDemandModel"], "claude")
+
     def test_failed_refresh_exposes_error_state_and_keeps_data_age(self) -> None:
         with patch.object(server, "_do_refresh", return_value="network unavailable"):
             payload = server.request_refresh(wait=True)
@@ -144,6 +161,34 @@ class RefreshQueueTests(unittest.TestCase):
         self.assertEqual(payload["lastError"], "network unavailable")
         self.assertTrue(payload["hasData"])
         self.assertEqual(payload["ageSeconds"], 3.0)
+
+    def test_failures_back_off_automatic_but_not_manual_refreshes(self) -> None:
+        calls: list[bool] = []
+
+        def failing(*, include_models: bool = True) -> str:
+            calls.append(include_models)
+            return "HTTP 503"
+
+        with patch.object(server, "_do_refresh", side_effect=failing):
+            first = server.request_refresh(wait=True)
+            self.assertEqual(first["consecutiveFailures"], 1)
+            self.assertGreater(first["retryInSeconds"], 0)
+
+            skipped = server.request_refresh(include_models=False, auto=True)
+            self.assertIsNone(server._refresh_thread)
+            self.assertEqual(skipped["consecutiveFailures"], 1)
+
+            server.request_refresh(wait=True)  # manual refresh still runs
+        self.assertEqual(calls, [True, True])
+        self.assertEqual(server._consecutive_failures, 2)
+
+    def test_success_clears_backoff(self) -> None:
+        server._consecutive_failures = 3
+        server._next_auto_refresh_at = server.time.monotonic() + 999
+        with patch.object(server, "_do_refresh", return_value=None):
+            payload = server.request_refresh(wait=True)
+        self.assertEqual(payload["consecutiveFailures"], 0)
+        self.assertIsNone(payload["retryInSeconds"])
 
 
 class LocalRequestSecurityTests(unittest.TestCase):
