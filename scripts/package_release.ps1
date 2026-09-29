@@ -36,7 +36,21 @@ Copy-Item (Join-Path $root "CHANGELOG.md") $stage
 New-Item (Join-Path $stage "assets") -ItemType Directory -Force | Out-Null
 Copy-Item (Join-Path $root "assets\app.png") (Join-Path $stage "assets\app.png")
 
-Compress-Archive -Path $stage -DestinationPath $archive -CompressionLevel Optimal
+# ZipFile opens files for shared reading; Compress-Archive (PowerShell 5) fails with
+# "access denied" while antivirus is still scanning the freshly copied files.
+# Entries are added one by one so names use "/" as the zip format requires
+# (.NET Framework's CreateFromDirectory writes "\").
+Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+$zip = [System.IO.Compression.ZipFile]::Open($archive, [System.IO.Compression.ZipArchiveMode]::Create)
+try {
+    $base = Split-Path $stage -Parent
+    Get-ChildItem $stage -Recurse -File | ForEach-Object {
+        $name = $_.FullName.Substring($base.Length + 1).Replace('\', '/')
+        [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $_.FullName, $name, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+    }
+} finally {
+    $zip.Dispose()
+}
 Remove-Item $stage -Recurse -Force
 
 Write-Host "Release package: $archive"
