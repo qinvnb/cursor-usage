@@ -7,8 +7,9 @@
 读取当前电脑的 Cursor 登录状态，展示计费周期、套餐内额度、个人按需用量、每日趋势和模型成本。
 有两种形态，共用同一套数据核心和看板：
 
-- **桌面版**（Windows 11）：托盘、悬浮球、任务栏组件和独立看板窗口
-- **Cursor 插件**：状态栏常驻显示用量，命令面板打开看板，跟随编辑器主题
+- **桌面版**（Windows 11）：托盘、悬浮球、任务栏组件和独立看板窗口，[下载](https://github.com/qinvnb/cursor-usage/releases/latest)
+- **Cursor 插件**：状态栏常驻显示用量，命令面板打开看板，跟随编辑器主题；
+  在扩展面板搜索 `qinvnb.cursor-usage` 安装，或见 [Open VSX](https://open-vsx.org/extension/qinvnb/cursor-usage)
 
 数据只保存在本机。
 
@@ -54,38 +55,28 @@ Cursor 插件（`packages/extension`）复用同一个 core 与看板：引擎�
 状态栏也照常更新），用 Node 内置的 `fetch` 和 `node:sqlite` 实现 `Host`，看板通过
 `postMessage` 接收数据快照。
 
-## Cursor 插件
-
-```powershell
-npm ci
-npm run package:extension                      # 生成 release\cursor-usage-<版本>.vsix
-cursor --install-extension release\cursor-usage-0.1.0.vsix
-```
-
-也可以在 Cursor 的扩展面板里选择“从 VSIX 安装…”。安装后状态栏右侧会出现用量，点击或执行命令
-`Cursor Usage: 打开用量看板`。设置项见 [packages/extension/README.md](packages/extension/README.md)。
-
-插件以只读方式读取 `state.vscdb`（依赖 Cursor 内置的 `node:sqlite`，数 GB 的数据库也只需
-几毫秒），手动凭证保存在 VS Code 的 SecretStorage。
-
-发布到 Open VSX（Cursor 的扩展市场）：用 GitHub 登录 [open-vsx.org](https://open-vsx.org)，
-在 Settings 里关联 Eclipse 账号并签署 Publisher Agreement，再生成 Access Token，然后执行
-（令牌在终端里隐藏输入，namespace 不存在时会自动创建）：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\publish_openvsx.ps1
-```
-
 ## 环境要求
 
-- Windows 11（任务栏组件仅支持主屏任务栏）
 - 已安装并登录 Cursor
-- Microsoft Edge WebView2 Runtime（Windows 11 通常已内置）
+- 桌面版：Windows 11（任务栏组件仅支持主屏任务栏）、Microsoft Edge WebView2 Runtime（Windows 11 通常已内置）
 - 从源码运行 / 构建：Python 3.11–3.13、Node.js 22.5+（测试用到 `node:sqlite`）
 
-## 直接使用
+## 安装
 
-1. 从 GitHub Releases 下载最新的 `CursorUsage-v<版本>-win-x64.zip`。
+### Cursor 插件
+
+在 Cursor 的扩展面板搜索 `qinvnb.cursor-usage`（显示名 **Cursor Usage · Dashboard**）并安装，
+也可以在 [Open VSX](https://open-vsx.org/extension/qinvnb/cursor-usage) 查看。安装后状态栏右侧会出现用量，
+点击或执行命令 `Cursor Usage: 打开用量看板`。设置项见 [packages/extension/README.md](packages/extension/README.md)。
+
+离线安装：从 [GitHub Releases](https://github.com/qinvnb/cursor-usage/releases/latest) 下载 `.vsix`，
+在扩展面板选择“从 VSIX 安装…”。
+
+> Cursor 3.x 的 glass 模式会禁用第三方插件，请在 classic 模式下使用。
+
+### 桌面版
+
+1. 从 [GitHub Releases](https://github.com/qinvnb/cursor-usage/releases/latest) 下载最新的 `CursorUsage-v<版本>-win-x64.zip`。
 2. 解压完整文件夹，不要只复制 EXE。
 3. 运行 `CursorUsage.exe`；应用默认从托盘启动。
 4. 从托盘选择“显示看板”或“立即刷新”。
@@ -127,12 +118,6 @@ powershell -ExecutionPolicy Bypass -File .\scripts\build_exe.ps1
 
 依次运行 TypeScript 测试、构建看板、Python 测试和 PyInstaller，输出
 `dist\CursorUsage\CursorUsage.exe`。脚本会备份并恢复 `dist\CursorUsage\data\`。
-
-创建不包含本机数据的 Release 压缩包（版本号默认取 `cursor_usage_app/__init__.py`）：
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\package_release.ps1
-```
 
 ## 数据与隐私
 
@@ -182,7 +167,7 @@ packages/ui/        看板界面，构建为单文件 web/dist/index.html
 packages/extension/ Cursor 插件：NodeHost、状态栏、命令、Webview 面板
 cursor_usage_app/   桌面端：bridge.py、store.py、托盘、单实例、native/（任务栏组件、悬浮球）
 tests/              Python 测试
-scripts/            构建、发布、资源占用测量
+scripts/            构建与资源占用测量
 ```
 
 ## 已知限制
