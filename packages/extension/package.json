@@ -126,8 +126,7 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "package": "node build.mjs && vsce package --no-dependencies --out ../../release",
-    "publish:ovsx": "node build.mjs && npx --yes ovsx publish --no-dependencies"
+    "package": "node build.mjs && vsce package --no-dependencies --out ../../release"
   },
   "devDependencies": {
     "@cursor-usage/core": "*",

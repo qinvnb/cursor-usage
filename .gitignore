@@ -30,3 +30,6 @@ venv/
 .cursor/
 Thumbs.db
 Desktop.ini
+
+# Maintainer-only: publishes the extension to Open VSX with a personal token
+scripts/publish_openvsx.ps1
