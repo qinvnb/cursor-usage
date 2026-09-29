@@ -35,6 +35,7 @@ import { quota, type Cycle, type DaySeries } from "../derive";
 import { count, dayLabel, dayTitle, daysUnit, percent, tokens, usd, weekday, weekdayName } from "../format";
 import { Card, ColumnChart, HBars, Heatmap, Legend, MetricGrid, Notes, SplitBar, type TipRow } from "./charts";
 import { DailyChart, TOKEN_PARTS } from "./DailyChart";
+import { DownloadIcon } from "./icons";
 import type { Tone } from "./kit";
 import { PoolBlock, QuotaBlock, Quotas, bucketDetail, poolExhaustedText, poolPace } from "./Quotas";
 import { HistoryTable, ModelsTable, Table, cacheHitRate, toCsv, type Column } from "./Tables";
@@ -80,6 +81,7 @@ const splitLegend = () => [
 ];
 const exportBtn = (onClick: () => void) => (
   <button class="link-btn" onClick={onClick}>
+    <DownloadIcon />
     {L("导出 CSV", "Export CSV")}
   </button>
 );

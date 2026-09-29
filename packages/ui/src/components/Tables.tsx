@@ -1,6 +1,7 @@
 import { L, type CycleSnapshot, type ModelRow, type Report } from "@cursor-usage/core";
 import { useMemo, useState } from "preact/hooks";
 import { count, dayTitle, shortDate, tokens, usd } from "../format";
+import { ChevronIcon, DownloadIcon } from "./icons";
 import { ModelName } from "./kit";
 
 // ---- Sortable table plumbing --------------------------------------------
@@ -65,7 +66,7 @@ export function Table<T>({
               onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggle(c.key, !!c.right))}
             >
               {c.label}
-              <span class="dir">{sort.key === c.key ? (sort.dir === 1 ? "↑" : "↓") : ""}</span>
+              <span class="dir">{sort.key === c.key ? <ChevronIcon dir={sort.dir === 1 ? "up" : "down"} /> : null}</span>
             </th>
           ))}
         </tr>
@@ -155,6 +156,7 @@ export function ModelsTable({ report, onExport, onPick }: { report: Report; onEx
         <h2>{L("模型", "Models")}</h2>
         {rows.length > 0 && (
           <button class="link-btn" onClick={() => onExport(L("模型用量", "model-usage"), toCsv(rows, columns))}>
+            <DownloadIcon />
             {L("导出 CSV", "Export CSV")}
           </button>
         )}
@@ -279,6 +281,7 @@ export function HistoryTable({ history, current, onExport }: { history: CycleSna
       <div class="section-head">
         <h2>{L("历史周期", "Past cycles")}</h2>
         <button class="link-btn" onClick={() => onExport(L("历史周期", "history"), toCsv(rows, columns))}>
+          <DownloadIcon />
           {L("导出 CSV", "Export CSV")}
         </button>
       </div>

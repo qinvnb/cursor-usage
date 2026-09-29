@@ -85,10 +85,25 @@ export const BoxIcon = () => (
   </svg>
 );
 
+export const ChevronIcon = ({ dir = "down" }: { dir?: "up" | "down" }) => (
+  <svg {...common}>
+    <path d={dir === "up" ? "M4.5 9.5 8 6l3.5 3.5" : "M4.5 6.5 8 10l3.5-3.5"} />
+  </svg>
+);
+
+export const DownloadIcon = () => (
+  <svg {...common}>
+    <path d="M8 2.5v7.5M4.75 7 8 10.25 11.25 7" />
+    <path d="M2.75 11v1.25c0 .7.55 1.25 1.25 1.25h8c.7 0 1.25-.55 1.25-1.25V11" />
+  </svg>
+);
+
+/** Same mark as the app icon (cursor_usage_app/icon_art.py): graphite tile, gauge with a blue arc. */
 export const LogoMark = () => (
-  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" class="logo">
-    <circle cx="12" cy="12" r="9.5" fill="none" stroke="var(--border-strong)" stroke-width="3" />
-    <path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5" fill="none" stroke="var(--c-included)" stroke-width="3" stroke-linecap="round" />
-    <path d="M21.5 12a9.5 9.5 0 0 1-5.6 8.66" fill="none" stroke="var(--c-ondemand)" stroke-width="3" stroke-linecap="round" />
+  <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="logo">
+    <rect x="0.5" y="0.5" width="23" height="23" rx="5.5" fill="#1c1c20" stroke="rgba(255,255,255,0.1)" />
+    <path d="M7.76 16.24A6 6 0 1 1 16.24 16.24" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="2.4" stroke-linecap="round" />
+    <path d="M7.76 16.24A6 6 0 1 1 16.5 8.03" fill="none" stroke="#4f8cff" stroke-width="2.4" stroke-linecap="round" />
+    <circle cx="16.5" cy="8.03" r="0.85" fill="#fff" />
   </svg>
 );

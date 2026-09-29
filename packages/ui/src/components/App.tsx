@@ -200,19 +200,35 @@ export function App({ engine, api, active, settingsVersion }: AppProps) {
   );
 }
 
+/** Loading frame that mirrors the overview layout, so content lands without a jump. */
 function Placeholder() {
   return (
-    <div class="quota-cards" aria-busy="true">
-      {[0, 1].map((i) => (
-        <div class="panel quota-card" key={i}>
-          <div class="skeleton" style={{ width: "88px", height: "88px", borderRadius: "50%" }} />
-          <div class="quota-main">
-            <div class="skeleton" style={{ width: "80px", height: "14px" }} />
-            <div class="skeleton" style={{ width: "160px", height: "30px", marginTop: "10px" }} />
-            <div class="skeleton" style={{ width: "120px", height: "12px", marginTop: "12px" }} />
+    <div aria-busy="true" aria-label={L("正在加载", "Loading")}>
+      <div class="quota-cards three">
+        {[0, 1, 2].map((i) => (
+          <div class="panel quota-card" key={i}>
+            <div class="skeleton" style={{ width: "72px", height: "72px", borderRadius: "50%", flex: "none" }} />
+            <div class="quota-main">
+              <div class="skeleton" style={{ width: "40%", height: "12px" }} />
+              <div class="skeleton" style={{ width: "60%", height: "26px", marginTop: "12px" }} />
+              <div class="skeleton" style={{ width: "75%", height: "10px", marginTop: "14px" }} />
+              <div class="skeleton" style={{ width: "55%", height: "10px", marginTop: "6px" }} />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
+      <div class="metrics placeholder-metrics">
+        {[0, 1, 2, 3].map((i) => (
+          <div class="panel metric" key={i}>
+            <div class="skeleton" style={{ width: "45%", height: "10px" }} />
+            <div class="skeleton" style={{ width: "65%", height: "20px" }} />
+          </div>
+        ))}
+      </div>
+      <section class="section">
+        <div class="skeleton" style={{ width: "96px", height: "14px", marginBottom: "14px" }} />
+        <div class="panel skeleton" style={{ height: "220px" }} />
+      </section>
     </div>
   );
 }
