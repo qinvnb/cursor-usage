@@ -68,11 +68,12 @@ cursor --install-extension release\cursor-usage-0.1.0.vsix
 插件以只读方式读取 `state.vscdb`（依赖 Cursor 内置的 `node:sqlite`，数 GB 的数据库也只需
 几毫秒），手动凭证保存在 VS Code 的 SecretStorage。
 
-发布到 Open VSX（Cursor 的扩展市场）：在 [open-vsx.org](https://open-vsx.org) 创建 namespace
-`qinvnb` 和访问令牌后执行
+发布到 Open VSX（Cursor 的扩展市场）：用 GitHub 登录 [open-vsx.org](https://open-vsx.org)，
+在 Settings 里关联 Eclipse 账号并签署 Publisher Agreement，再生成 Access Token，然后执行
+（令牌在终端里隐藏输入，namespace 不存在时会自动创建）：
 
 ```powershell
-$env:OVSX_PAT = "<token>"; npm run build; npm run publish:ovsx -w cursor-usage
+powershell -ExecutionPolicy Bypass -File .\scripts\publish_openvsx.ps1
 ```
 
 ## 环境要求
