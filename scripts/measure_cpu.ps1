@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
-  Measure idle CPU time and disk writes of Cursor Usage and all child processes
-  (taskbar widget, floating ball, WebView2).
+  Measure idle CPU time and disk writes of Cursor Usage (one process that hosts
+  the dashboard, floating ball and taskbar widget) and its WebView2 children.
 
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File .\scripts\measure_cpu.ps1 -Seconds 300
@@ -32,9 +32,6 @@ function Get-AppProcesses {
 }
 
 function Get-Label($proc) {
-    $cmd = [string]$proc.CommandLine
-    if ($cmd -match "--dock|taskbar_widget") { return "taskbar-widget" }
-    if ($cmd -match "--ball|ball_tk") { return "floating-ball" }
     if ($proc.Name -like "msedgewebview2*") { return "webview2" }
     return "main"
 }

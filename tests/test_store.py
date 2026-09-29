@@ -37,10 +37,10 @@ class StoreTests(unittest.TestCase):
         store.settings_path().write_text("not-json", encoding="utf-8")
         self.assertTrue(store.load_settings()["ballEnabled"])
 
-        store.mark_refreshing(True)
-        store.mark_refreshing(False)
+        store.save_usage({"generation": 1, "fetchedAt": "a"})
+        store.save_usage({"generation": 2, "fetchedAt": "b"})
         store.meta_path().write_text("[invalid", encoding="utf-8")
-        self.assertTrue(store.load_meta()["refreshing"])
+        self.assertEqual(store.load_meta()["fetchedAt"], "a")
 
     def test_corrupt_primary_never_replaces_valid_backup(self) -> None:
         store.save_usage({"generation": 1})
@@ -75,6 +75,22 @@ class StoreTests(unittest.TestCase):
         self.assertNotIn("floatingBallEnabled", persisted)
         self.assertEqual(persisted["schemaVersion"], store.SETTINGS_SCHEMA_VERSION)
 
+    def test_alert_settings_are_validated(self) -> None:
+        settings = store.save_settings({"alertThresholds": [95, "70", 0, 101, 70, "x"], "onDemandBudget": "123.456"})
+        self.assertEqual(settings["alertThresholds"], [70, 95])
+        self.assertEqual(settings["onDemandBudget"], 123.46)
+        settings = store.save_settings({"alertThresholds": [], "onDemandBudget": -5})
+        self.assertEqual(settings["alertThresholds"], [80, 95])  # empty resets to the defaults
+        self.assertEqual(settings["onDemandBudget"], 0.0)
+
+    def test_export_file_only_allows_known_types(self) -> None:
+        with patch.object(store, "reveal_in_explorer"):
+            path = store.export_file("报告", "json", '{"a":1}')
+            self.assertEqual(path.suffix, ".json")
+            self.assertEqual(path.read_text(encoding="utf-8"), '{"a":1}')
+            with self.assertRaises(ValueError):
+                store.export_file("x", "exe", "")
+
     def test_new_install_enables_native_taskbar_only(self) -> None:
         settings = store.load_settings()
         self.assertTrue(settings["dockEnabled"])
@@ -91,12 +107,6 @@ class StoreTests(unittest.TestCase):
         self.assertFalse(settings["dockEnabled"])
         self.assertNotIn("dockX", settings)
         self.assertNotIn("dockOpacity", settings)
-
-    def test_consumed_command_is_not_restored_from_backup(self) -> None:
-        store.write_command({"action": "show-main"})
-        store.write_command({"action": "hide-ball"})
-        self.assertEqual(store.consume_command(), {"action": "hide-ball"})
-        self.assertIsNone(store.consume_command())
 
     def test_legacy_data_migrates_without_overwriting_user_data(self) -> None:
         legacy = self.root / "legacy"

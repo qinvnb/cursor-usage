@@ -1,0 +1,20 @@
+{
+  "displayName": "Cursor Usage · 用量看板",
+  "description": "在状态栏查看 Cursor 套餐内额度（Cursor 模型 / 其他模型）与个人按需用量，打开完整的用量看板（每日趋势、模型成本、使用时段、历史周期）。数据只保存在本机。",
+  "command.openDashboard": "打开用量看板",
+  "command.refresh": "立即刷新用量",
+  "command.copySummary": "复制用量摘要",
+  "config.language": "状态栏、提醒和看板的显示语言",
+  "config.language.auto": "跟随 Cursor 的显示语言",
+  "config.refreshSeconds": "自动刷新间隔（秒）。每 10 分钟会自动做一次含模型明细的完整同步。同时运行桌面版时可以调大，避免重复拉取。",
+  "config.statusBar": "状态栏显示的内容",
+  "config.statusBar.auto": "其他模型（API）额度未用完时显示套餐内，用完后显示个人按需",
+  "config.statusBar.ondemand": "只显示个人按需",
+  "config.statusBar.included": "只显示套餐内",
+  "config.statusBar.both": "两者都显示",
+  "config.statusBar.hidden": "不显示状态栏项",
+  "config.alerts.enabled": "用量超过阈值，或按当前节奏 3 天内用完时提醒（每个周期每档只提醒一次）",
+  "config.alerts.thresholds": "预警阈值（百分比）",
+  "config.onDemandBudget": "个人按需预算（美元）。低于 Cursor 上限时，预警按这个预算计算；0 表示不使用",
+  "config.stateDbPath": "Cursor 登录数据 state.vscdb 的路径；留空则自动查找"
+}

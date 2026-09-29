@@ -103,6 +103,7 @@ def meta_path() -> Path:
 
 
 def _atomic_write(path: Path, payload: dict[str, Any], *, indent: int | None = 2) -> None:
+    _file_cache.pop(path, None)
     path.parent.mkdir(parents=True, exist_ok=True)
     if indent is None:
         raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
@@ -139,6 +140,7 @@ def _read_json_file(path: Path) -> dict[str, Any] | None:
 
 def _replace_file_from_bytes(path: Path, content: bytes) -> None:
     """Atomically replace *path* with already validated file content."""
+    _file_cache.pop(path, None)
     fd, tmp_name = tempfile.mkstemp(prefix=path.stem + ".", suffix=".tmp", dir=str(path.parent))
     try:
         with os.fdopen(fd, "wb") as f:
@@ -171,15 +173,17 @@ def read_json(path: Path) -> dict[str, Any] | None:
     return recovered
 
 
-_file_cache: dict[Path, tuple[tuple[int, int], dict[str, Any]]] = {}
+_file_cache: dict[Path, tuple[tuple[int, int, int], dict[str, Any]]] = {}
 
 
-def _stat_key(path: Path) -> tuple[int, int] | None:
+def _stat_key(path: Path) -> tuple[int, int, int] | None:
+    # st_ino (the NTFS file ID) changes on every atomic replace, which covers
+    # same-size rewrites landing within the ~15 ms mtime granularity.
     try:
         st = path.stat()
     except OSError:
         return None
-    return st.st_mtime_ns, st.st_size
+    return st.st_mtime_ns, st.st_size, st.st_ino
 
 
 def read_json_cached(path: Path) -> dict[str, Any] | None:
@@ -217,6 +221,17 @@ def summary_from_report(report: dict[str, Any]) -> dict[str, Any]:
     used_pct = (
         min(100.0, individual_used / individual_limit * 100.0) if individual_limit > 0 else 0.0
     )
+    plan_usage = (report.get("periodUsage") or {}).get("planUsage") or {}
+    has_pools = any(plan_usage.get(k) is not None for k in ("autoPercentUsed", "apiPercentUsed"))
+
+    def pool(key: str) -> float | None:
+        if not has_pools:
+            return None
+        try:
+            return round(float(summary.get(key) or 0), 1)
+        except (TypeError, ValueError):
+            return 0.0
+
     return {
         "email": account.get("email"),
         "planName": plan.get("planName"),
@@ -227,6 +242,8 @@ def summary_from_report(report: dict[str, Any]) -> dict[str, Any]:
         "includedUsedCents": summary.get("includedUsedCents"),
         "includedLimitCents": summary.get("includedLimitCents"),
         "includedRemainingCents": summary.get("includedRemainingCents"),
+        "autoPercentUsed": pool("autoPercentUsed"),
+        "apiPercentUsed": pool("apiPercentUsed"),
         "usedPercent": round(used_pct, 1),
         "topOnDemandModel": summary.get("topOnDemandModel"),
         "billingCycleStart": summary.get("billingCycleStart"),
@@ -255,7 +272,6 @@ def load_meta() -> dict[str, Any]:
     with _lock:
         meta = read_json_cached(meta_path()) or {}
     return {
-        "refreshing": bool(meta.get("refreshing")),
         "lastSuccessAt": meta.get("lastSuccessAt"),
         "fetchedAt": meta.get("fetchedAt"),
         "usageDigest": meta.get("usageDigest"),
@@ -266,16 +282,7 @@ def load_meta() -> dict[str, Any]:
     }
 
 
-def _write_meta(**fields: Any) -> dict[str, Any]:
-    with _lock:
-        meta = read_json(meta_path()) or {}
-        meta.update(fields)
-        meta["updatedAt"] = datetime.now(timezone.utc).isoformat()
-        _atomic_write(meta_path(), meta)
-        return dict(meta)
-
-
-def save_usage(report: dict[str, Any]) -> bool:
+def save_usage(report: dict[str, Any], summary: dict[str, Any] | None = None) -> bool:
     """Persist a fresh report. Returns False when only fetchedAt changed.
 
     Unchanged reports skip rewriting usage.json/summary.json; freshness is
@@ -287,16 +294,14 @@ def save_usage(report: dict[str, Any]) -> bool:
         previous = read_json_cached(usage_path())
         changed = digest != meta.get("usageDigest") or previous is None
         if changed:
-            if previous is not None:
-                _record_cycle_snapshot(previous, report)
             _atomic_write(usage_path(), report, indent=None)
-            summary = summary_from_report(report)
+            summary = summary if summary is not None else summary_from_report(report)
             if summary != read_json(summary_path()):
                 _atomic_write(summary_path(), summary, indent=None)
         now = datetime.now(timezone.utc).isoformat()
+        meta.pop("refreshing", None)
         meta.update(
             {
-                "refreshing": False,
                 "lastSuccessAt": now,
                 "lastAttemptAt": now,
                 "lastError": None,
@@ -317,44 +322,10 @@ def history_path() -> Path:
     return data_dir() / "history.json"
 
 
-def cycle_snapshot(report: dict[str, Any]) -> dict[str, Any] | None:
-    """Compact per-cycle totals used by the history page."""
-    summary = report.get("summary") or {}
-    start = summary.get("billingCycleStart")
-    if not start:
-        return None
-    models = report.get("models") or []
-    included = float(summary.get("includedUsedCents") or 0)
-    individual = float(summary.get("individualUsedCents") or 0)
-    return {
-        "cycleStart": str(start),
-        "cycleEnd": str(summary.get("billingCycleEnd") or ""),
-        "planName": (report.get("planInfo") or {}).get("planName"),
-        "includedUsedCents": included,
-        "includedLimitCents": float(summary.get("includedLimitCents") or 0),
-        "individualUsedCents": individual,
-        "individualLimitCents": float(summary.get("individualLimitCents") or 0),
-        "totalCents": included + individual,
-        "eventCount": summary.get("eventCount"),
-        "topModels": [
-            {"model": m.get("model"), "costCents": float(m.get("totalCostCents") or 0)}
-            for m in models[:5]
-        ],
-        "capturedAt": report.get("fetchedAt"),
-    }
-
-
-def _record_cycle_snapshot(previous: dict[str, Any], current: dict[str, Any]) -> None:
-    """When the billing cycle rolls over, keep the finished cycle's final numbers."""
-    old = cycle_snapshot(previous)
-    new_start = str((current.get("summary") or {}).get("billingCycleStart") or "")
-    if old is None or not new_start or old["cycleStart"] == new_start:
-        return
-    history = load_history()
-    cycles = [c for c in history.get("cycles", []) if c.get("cycleStart") != old["cycleStart"]]
-    cycles.append(old)
-    cycles.sort(key=lambda c: int(c.get("cycleStart") or 0))
-    _atomic_write(history_path(), {"cycles": cycles[-HISTORY_LIMIT:]}, indent=None)
+def save_history(cycles: list[dict[str, Any]]) -> None:
+    """Cycle snapshots are computed by the TypeScript core; store them as given."""
+    with _lock:
+        _atomic_write(history_path(), {"cycles": list(cycles)[-HISTORY_LIMIT:]}, indent=None)
 
 
 def load_history() -> dict[str, Any]:
@@ -376,61 +347,40 @@ def save_alerts_state(state: dict[str, Any]) -> None:
         _atomic_write(alerts_state_path(), state, indent=None)
 
 
-def mark_refreshing(active: bool, error: str | None = None) -> None:
-    fields: dict[str, Any] = {
-        "refreshing": bool(active),
-        "lastAttemptAt": datetime.now(timezone.utc).isoformat(),
-    }
-    if error is not None:
-        fields["lastError"] = error
-        fields["refreshing"] = False
-    _write_meta(**fields)
+def reveal_in_explorer(path: Path) -> None:
+    if sys.platform == "win32":
+        import subprocess
+
+        try:
+            subprocess.Popen(["explorer.exe", f"/select,{path}"])
+        except OSError:
+            pass
 
 
-def clear_stale_refresh_flag() -> None:
-    """If a previous process died mid-refresh, unstick meta.refreshing."""
-    with _lock:
-        meta = read_json(meta_path()) or {}
-        if meta.get("refreshing"):
-            meta["refreshing"] = False
-            meta["updatedAt"] = datetime.now(timezone.utc).isoformat()
-            if not meta.get("lastError"):
-                meta["lastError"] = "上次刷新被中断"
-            _atomic_write(meta_path(), meta)
+EXPORT_EXTENSIONS = {"csv", "json"}
 
 
-def command_path() -> Path:
-    return data_dir() / "command.json"
+def export_file(name: str, extension: str, content: str) -> Path:
+    """Write an export under data/exports and reveal it.
+
+    CSV gets a UTF-8 BOM so Excel detects the encoding.
+    """
+    import re
+
+    ext = extension.lower().lstrip(".")
+    if ext not in EXPORT_EXTENSIONS:
+        raise ValueError(f"unsupported export type: {extension}")
+    safe = re.sub(r'[\\/:*?"<>|\s]+', "_", name).strip("._") or "export"
+    folder = data_dir() / "exports"
+    folder.mkdir(parents=True, exist_ok=True)
+    destination = folder / f"{safe[:60]}-{datetime.now():%Y%m%d-%H%M%S}.{ext}"
+    destination.write_text(content, encoding="utf-8-sig" if ext == "csv" else "utf-8", newline="")
+    reveal_in_explorer(destination)
+    return destination
 
 
-def write_command(payload: dict[str, Any]) -> None:
-    with _lock:
-        _atomic_write(command_path(), payload)
-
-
-def consume_command() -> dict[str, Any] | None:
-    path = command_path()
-    with _lock:
-        # Commands are ephemeral IPC migration data. Never recover them from
-        # .bak, otherwise an already-consumed hide/toggle command repeats
-        # forever after the primary file is deleted.
-        data = _read_json_file(path)
-        if data is None:
-            return None
-        for consumed in (path, path.with_suffix(path.suffix + ".bak")):
-            try:
-                consumed.unlink(missing_ok=True)
-            except OSError:
-                pass
-        return data
-
-
-def write_server_info(url: str, port: int) -> None:
-    with _lock:
-        _atomic_write(
-            data_dir() / "server.json",
-            {"url": url, "port": port, "updatedAt": datetime.now(timezone.utc).isoformat()},
-        )
+def export_csv(name: str, csv_text: str) -> Path:
+    return export_file(name, "csv", csv_text)
 
 
 def age_seconds() -> float | None:
@@ -489,8 +439,13 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "dockCompact": False,
     "lastView": "home",
     "alertsEnabled": True,
+    "alertThresholds": [80, 95],
+    # Personal on-demand budget in dollars; 0 = use Cursor's limit.
+    "onDemandBudget": 0.0,
     # Off by default: contacting GitHub is the only non-Cursor network request.
     "checkUpdates": False,
+    # "auto" follows the Windows display language; "zh" / "en" pin it.
+    "language": "auto",
 }
 
 DASHBOARD_VIEWS = ("home", "ondemand", "included", "daily", "models", "history", "settings")
@@ -605,6 +560,24 @@ def _normalize_settings(raw: dict[str, Any]) -> dict[str, Any]:
     for key in ("alertsEnabled", "checkUpdates"):
         if key in raw:
             out[key] = bool(raw[key])
+    if isinstance(raw.get("alertThresholds"), list):
+        thresholds: list[int] = []
+        for value in raw["alertThresholds"]:
+            try:
+                level = int(round(float(value)))
+            except (TypeError, ValueError):
+                continue
+            if 1 <= level <= 100 and level not in thresholds:
+                thresholds.append(level)
+        if thresholds:
+            out["alertThresholds"] = sorted(thresholds)[:5]
+    if "onDemandBudget" in raw:
+        try:
+            out["onDemandBudget"] = max(0.0, min(100000.0, round(float(raw["onDemandBudget"] or 0), 2)))
+        except (TypeError, ValueError):
+            pass
+    if "language" in raw:
+        out["language"] = raw["language"] if raw["language"] in ("auto", "zh", "en") else "auto"
     if "persistLocalRefresh" in raw:
         out["persistLocalRefresh"] = bool(raw["persistLocalRefresh"])
     if "launchAtStartup" in raw:
@@ -791,7 +764,7 @@ def credentials_public_info() -> dict[str, Any]:
     refresh = creds.get("refreshToken") or ""
     preview = ""
     if access:
-        preview = ("…" + access[-8:]) if len(access) > 8 else "已设置"
+        preview = ("…" + access[-8:]) if len(access) > 8 else "✓"
     return {
         "hasManualCredentials": bool(access),
         "hasRefreshToken": bool(refresh),

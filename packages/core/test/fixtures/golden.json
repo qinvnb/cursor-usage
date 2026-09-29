@@ -1,0 +1,2547 @@
+{
+ "timezone": "Asia/Shanghai",
+ "period": {
+  "billingCycleStart": "1771901466000",
+  "billingCycleEnd": "1774493466000",
+  "displayMessage": "You've used 12% of your included usage",
+  "planUsage": {
+   "limit": 2000,
+   "includedSpend": 1450,
+   "bonusSpend": 6120,
+   "autoPercentUsed": 12.5,
+   "apiPercentUsed": 64.25,
+   "totalPercentUsed": 21.75
+  },
+  "spendLimitUsage": {
+   "individualLimit": 20000,
+   "individualRemaining": 20000,
+   "pooledUsed": 31250,
+   "totalSpend": 31250,
+   "limitType": "team"
+  }
+ },
+ "plan": {
+  "planName": "Pro",
+  "price": "$20/mo"
+ },
+ "events": [
+  {
+   "timestamp": "1772347076322",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 32.17975471496582,
+   "tokenUsage": {
+    "inputTokens": 9,
+    "outputTokens": 733,
+    "cacheReadTokens": 367258,
+    "cacheWriteTokens": 2913,
+    "totalCents": 21.08275026321411
+   }
+  },
+  {
+   "timestamp": "1772347004854",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 18.72572639465332,
+   "tokenUsage": {
+    "inputTokens": 5,
+    "outputTokens": 537,
+    "cacheReadTokens": 216725,
+    "cacheWriteTokens": 895,
+    "totalCents": 12.198724002838134
+   }
+  },
+  {
+   "timestamp": "1772346645926",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 52.662266387939454,
+   "tokenUsage": {
+    "inputTokens": 16,
+    "outputTokens": 781,
+    "cacheReadTokens": 641553,
+    "cacheWriteTokens": 1365,
+    "totalCents": 33.40358741760254
+   }
+  },
+  {
+   "timestamp": "1772346605725",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 12.85226369857788,
+   "tokenUsage": {
+    "inputTokens": 4,
+    "outputTokens": 290,
+    "cacheReadTokens": 136772,
+    "cacheWriteTokens": 2400,
+    "totalCents": 8.67972949028015
+   }
+  },
+  {
+   "timestamp": "1772346453905",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 6.135062227249145,
+   "tokenUsage": {
+    "inputTokens": 2,
+    "outputTokens": 266,
+    "cacheReadTokens": 67843,
+    "cacheWriteTokens": 338,
+    "totalCents": 4.087211503982544
+   }
+  },
+  {
+   "timestamp": "1772346388292",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 11.701680507659912,
+   "tokenUsage": {
+    "inputTokens": 4,
+    "outputTokens": 373,
+    "cacheReadTokens": 134984,
+    "cacheWriteTokens": 472,
+    "totalCents": 7.637844018936157
+   }
+  },
+  {
+   "timestamp": "1772346238702",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1772346132092",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 514.1664373779297,
+   "tokenUsage": {
+    "inputTokens": 27,
+    "outputTokens": 20062,
+    "cacheReadTokens": 5337942,
+    "cacheWriteTokens": 283433,
+    "totalCents": 345.3849481201172
+   }
+  },
+  {
+   "timestamp": "1772346129009",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 11.850641231536866,
+   "tokenUsage": {
+    "inputTokens": 4,
+    "outputTokens": 446,
+    "cacheReadTokens": 133796,
+    "cacheWriteTokens": 574,
+    "totalCents": 7.817117214202881
+   }
+  },
+  {
+   "timestamp": "1772346119408",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1772346083072",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 5.407996983528137,
+   "tokenUsage": {
+    "inputTokens": 2,
+    "outputTokens": 54,
+    "cacheReadTokens": 66652,
+    "cacheWriteTokens": 145,
+    "totalCents": 3.4078883504867554
+   }
+  },
+  {
+   "timestamp": "1772345746767",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 151.0014289855957,
+   "tokenUsage": {
+    "inputTokens": 53,
+    "outputTokens": 2785,
+    "cacheReadTokens": 1770900,
+    "cacheWriteTokens": 10301,
+    "totalCents": 97.62647247314453
+   }
+  },
+  {
+   "timestamp": "1772345705374",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1772345534303",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 348.0409112548828,
+   "tokenUsage": {
+    "inputTokens": 7,
+    "outputTokens": 6991,
+    "cacheReadTokens": 490749,
+    "cacheWriteTokens": 484926,
+    "totalCents": 318.6413018798828
+   }
+  },
+  {
+   "timestamp": "1772345490519",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1772345426119",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 9.978527097702026,
+   "tokenUsage": {
+    "inputTokens": 4,
+    "outputTokens": 395,
+    "cacheReadTokens": 112128,
+    "cacheWriteTokens": 475,
+    "totalCents": 6.597769317626953
+   }
+  },
+  {
+   "timestamp": "1772345153199",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 94.01503540039062,
+   "tokenUsage": {
+    "inputTokens": 37,
+    "outputTokens": 4066,
+    "cacheReadTokens": 993404,
+    "cacheWriteTokens": 10932,
+    "totalCents": 63.84451278686523
+   }
+  },
+  {
+   "timestamp": "1772344768366",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 74.23033226013183,
+   "tokenUsage": {
+    "inputTokens": 24,
+    "outputTokens": 2557,
+    "cacheReadTokens": 512601,
+    "cacheWriteTokens": 44801,
+    "totalCents": 57.47673980712891
+   }
+  },
+  {
+   "timestamp": "1772344466951",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 27.461869621276854,
+   "tokenUsage": {
+    "inputTokens": 2,
+    "outputTokens": 560,
+    "cacheReadTokens": 480796,
+    "cacheWriteTokens": 337,
+    "totalCents": 13.050501594543457
+   }
+  },
+  {
+   "timestamp": "1772344271606",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 81.7204401397705,
+   "tokenUsage": {
+    "inputTokens": 9,
+    "outputTokens": 1290,
+    "cacheReadTokens": 1434954,
+    "cacheWriteTokens": 2091,
+    "totalCents": 38.68801448822021
+   }
+  },
+  {
+   "timestamp": "1772344240143",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 14.118243274688721,
+   "tokenUsage": {
+    "inputTokens": 2,
+    "outputTokens": 450,
+    "cacheReadTokens": 237969,
+    "cacheWriteTokens": 338,
+    "totalCents": 6.975047883987426
+   }
+  },
+  {
+   "timestamp": "1772344118903",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 47.718999252319335,
+   "tokenUsage": {
+    "inputTokens": 22,
+    "outputTokens": 2753,
+    "cacheReadTokens": 423952,
+    "cacheWriteTokens": 12826,
+    "totalCents": 34.56843399047852
+   }
+  },
+  {
+   "timestamp": "1772344117162",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 33.84221565246582,
+   "tokenUsage": {
+    "inputTokens": 67617,
+    "outputTokens": 1800,
+    "cacheReadTokens": 273514,
+    "totalCents": 33.84221565246582
+   }
+  },
+  {
+   "timestamp": "1772344078609",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 9.246325769424438,
+   "tokenUsage": {
+    "inputTokens": 1710,
+    "outputTokens": 1330,
+    "cacheReadTokens": 131721,
+    "totalCents": 9.246325769424438
+   }
+  },
+  {
+   "timestamp": "1772344067806",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 6.230487928390502,
+   "tokenUsage": {
+    "inputTokens": 4,
+    "outputTokens": 355,
+    "cacheReadTokens": 51680,
+    "cacheWriteTokens": 2146,
+    "totalCents": 4.609395184516907
+   }
+  },
+  {
+   "timestamp": "1772343979587",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 27.917362174987794,
+   "tokenUsage": {
+    "inputTokens": 11,
+    "outputTokens": 1046,
+    "cacheReadTokens": 120779,
+    "cacheWriteTokens": 25437,
+    "totalCents": 23.511227493286132
+   }
+  },
+  {
+   "timestamp": "1772343908906",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 35.88154510498047,
+   "tokenUsage": {
+    "inputTokens": 62617,
+    "outputTokens": 2071,
+    "cacheReadTokens": 324344,
+    "totalCents": 35.88154510498047
+   }
+  },
+  {
+   "timestamp": "1772343837972",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 53.29509048461914,
+   "tokenUsage": {
+    "inputTokens": 5,
+    "outputTokens": 693,
+    "cacheReadTokens": 949553,
+    "cacheWriteTokens": 760,
+    "totalCents": 24.842703895568846
+   }
+  },
+  {
+   "timestamp": "1772343765915",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 27.200116233825682,
+   "tokenUsage": {
+    "inputTokens": 4,
+    "outputTokens": 351,
+    "cacheReadTokens": 472758,
+    "cacheWriteTokens": 1413,
+    "totalCents": 13.003241958618164
+   }
+  },
+  {
+   "timestamp": "1772343718306",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 13.99323818206787,
+   "tokenUsage": {
+    "inputTokens": 2,
+    "outputTokens": 257,
+    "cacheReadTokens": 235796,
+    "cacheWriteTokens": 1069,
+    "totalCents": 6.898952379226684
+   }
+  },
+  {
+   "timestamp": "1772343714392",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1772343503269",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 283.0314794921875,
+   "tokenUsage": {
+    "inputTokens": 13,
+    "outputTokens": 6104,
+    "cacheReadTokens": 2299767,
+    "cacheWriteTokens": 229808,
+    "totalCents": 207.16853302001954
+   }
+  },
+  {
+   "timestamp": "1772337572061",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 30.59648868560791,
+   "tokenUsage": {
+    "inputTokens": 62817,
+    "outputTokens": 669,
+    "cacheReadTokens": 252042,
+    "totalCents": 30.59648868560791
+   }
+  },
+  {
+   "timestamp": "1772337537353",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 922.4884887695313,
+   "tokenUsage": {
+    "inputTokens": 89,
+    "outputTokens": 67718,
+    "cacheReadTokens": 13027241,
+    "cacheWriteTokens": 90389,
+    "totalCents": 528.0061395263672
+   }
+  },
+  {
+   "timestamp": "1772337310985",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 29.574342765808105,
+   "tokenUsage": {
+    "inputTokens": 59005,
+    "outputTokens": 640,
+    "cacheReadTokens": 250559,
+    "totalCents": 29.574342765808105
+   }
+  },
+  {
+   "timestamp": "1772337277060",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 55.18694625854492,
+   "tokenUsage": {
+    "inputTokens": 7,
+    "outputTokens": 4161,
+    "cacheReadTokens": 786884,
+    "cacheWriteTokens": 4334,
+    "totalCents": 31.390554161071776
+   }
+  },
+  {
+   "timestamp": "1772337236686",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1772337105545",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 15.614553356170655,
+   "tokenUsage": {
+    "inputTokens": 892,
+    "outputTokens": 1272,
+    "cacheReadTokens": 242126,
+    "totalCents": 15.614553356170655
+   }
+  },
+  {
+   "timestamp": "1772336623975",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 276.3016583251953,
+   "tokenUsage": {
+    "inputTokens": 34,
+    "outputTokens": 15460,
+    "cacheReadTokens": 2990679,
+    "cacheWriteTokens": 123773,
+    "totalCents": 182.65982116699217
+   }
+  },
+  {
+   "timestamp": "1772336542817",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 96.58951736450194,
+   "tokenUsage": {
+    "inputTokens": 104533,
+    "outputTokens": 7411,
+    "cacheReadTokens": 1107174,
+    "totalCents": 96.58951736450194
+   }
+  },
+  {
+   "timestamp": "1772336217957",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1772336145643",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 17.183787136077882,
+   "tokenUsage": {
+    "inputTokens": 5,
+    "outputTokens": 690,
+    "cacheReadTokens": 270363,
+    "cacheWriteTokens": 1512,
+    "totalCents": 9.029048681259155
+   }
+  },
+  {
+   "timestamp": "1772335924540",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 40.16174598693848,
+   "tokenUsage": {
+    "inputTokens": 10,
+    "outputTokens": 1766,
+    "cacheReadTokens": 614347,
+    "cacheWriteTokens": 4446,
+    "totalCents": 21.59554557800293
+   }
+  },
+  {
+   "timestamp": "1772335727748",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 121.90001953125,
+   "tokenUsage": {
+    "inputTokens": 21,
+    "outputTokens": 3866,
+    "cacheReadTokens": 1167212,
+    "cacheWriteTokens": 79046,
+    "totalCents": 84.49812934875489
+   }
+  },
+  {
+   "timestamp": "1772335500325",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 66.24761695861817,
+   "tokenUsage": {
+    "inputTokens": 9,
+    "outputTokens": 4757,
+    "cacheReadTokens": 314237,
+    "cacheWriteTokens": 60154,
+    "totalCents": 54.90400108337402
+   }
+  },
+  {
+   "timestamp": "1772335167867",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 58.09621948242187,
+   "tokenUsage": {
+    "inputTokens": 15,
+    "outputTokens": 5058,
+    "cacheReadTokens": 303992,
+    "cacheWriteTokens": 46891,
+    "totalCents": 47.44674186706543
+   }
+  },
+  {
+   "timestamp": "1772333083843",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 51.183575286865235,
+   "tokenUsage": {
+    "inputTokens": 15,
+    "outputTokens": 5396,
+    "cacheReadTokens": 295830,
+    "cacheWriteTokens": 35284,
+    "totalCents": 41.1153959274292
+   }
+  },
+  {
+   "timestamp": "1772332454624",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 150.54629287719726,
+   "tokenUsage": {
+    "inputTokens": 271962,
+    "outputTokens": 6257,
+    "cacheReadTokens": 1353048,
+    "totalCents": 150.54629287719726
+   }
+  },
+  {
+   "timestamp": "1772331604416",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 14.971719551086425,
+   "tokenUsage": {
+    "inputTokens": 11,
+    "outputTokens": 1404,
+    "cacheReadTokens": 124673,
+    "cacheWriteTokens": 2969,
+    "totalCents": 11.110585575103759
+   }
+  },
+  {
+   "timestamp": "1772331575268",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 237.34534912109373,
+   "tokenUsage": {
+    "inputTokens": 139915,
+    "outputTokens": 12212,
+    "cacheReadTokens": 3260387,
+    "totalCents": 237.34534912109373
+   }
+  },
+  {
+   "timestamp": "1772331511200",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 11.646054849624633,
+   "tokenUsage": {
+    "inputTokens": 7,
+    "outputTokens": 1943,
+    "cacheReadTokens": 70440,
+    "cacheWriteTokens": 2316,
+    "totalCents": 9.411013946533203
+   }
+  },
+  {
+   "timestamp": "1772331457716",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 14.141125392913818,
+   "tokenUsage": {
+    "inputTokens": 5,
+    "outputTokens": 1028,
+    "cacheReadTokens": 17182,
+    "cacheWriteTokens": 16411,
+    "totalCents": 13.105164432525635
+   }
+  },
+  {
+   "timestamp": "1772331448489",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "Claude Fable 5.1 (Auto Balanced)",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1772331403405",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "Claude Fable 5.1 (Auto Balanced)",
+   "chargedCents": 10.857928504943848,
+   "tokenUsage": {
+    "inputTokens": 2,
+    "outputTokens": 105,
+    "cacheReadTokens": 6062,
+    "cacheWriteTokens": 6463,
+    "totalCents": 10.480008058547973
+   }
+  },
+  {
+   "timestamp": "1772331394065",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 16.188917636871338,
+   "tokenUsage": {
+    "inputTokens": 254,
+    "outputTokens": 72,
+    "cacheReadTokens": 268673,
+    "totalCents": 16.188917636871338
+   }
+  },
+  {
+   "timestamp": "1772331249964",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 33.34975860595703,
+   "tokenUsage": {
+    "inputTokens": 2064,
+    "outputTokens": 1396,
+    "cacheReadTokens": 532349,
+    "totalCents": 33.34975860595703
+   }
+  },
+  {
+   "timestamp": "1772330886859",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 134.99262344360352,
+   "tokenUsage": {
+    "inputTokens": 130213,
+    "outputTokens": 3287,
+    "cacheReadTokens": 1695741,
+    "totalCents": 134.99262344360352
+   }
+  },
+  {
+   "timestamp": "1772330018423",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 55.64016090393066,
+   "tokenUsage": {
+    "inputTokens": 151129,
+    "outputTokens": 3833,
+    "cacheReadTokens": 279370,
+    "totalCents": 55.64016090393066
+   }
+  },
+  {
+   "timestamp": "1772329872649",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 53.63091209411621,
+   "tokenUsage": {
+    "inputTokens": 118431,
+    "outputTokens": 11589,
+    "cacheReadTokens": 283508,
+    "totalCents": 53.63091209411621
+   }
+  },
+  {
+   "timestamp": "1772329627069",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 463.0700909423828,
+   "tokenUsage": {
+    "inputTokens": 337073,
+    "outputTokens": 16371,
+    "cacheReadTokens": 6194243,
+    "totalCents": 463.0700909423828
+   }
+  },
+  {
+   "timestamp": "1772295458803",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-high (Auto Intelligence)",
+   "chargedCents": 110.85196365356445,
+   "tokenUsage": {
+    "inputTokens": 149193,
+    "outputTokens": 4134,
+    "cacheReadTokens": 279917,
+    "totalCents": 110.85196365356445
+   }
+  },
+  {
+   "timestamp": "1772295407226",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "Claude Fable 5.1 (Auto Intelligence)",
+   "chargedCents": 596.623154296875,
+   "tokenUsage": {
+    "inputTokens": 6,
+    "outputTokens": 5977,
+    "cacheReadTokens": 197217,
+    "cacheWriteTokens": 359721,
+    "totalCents": 579.7816479492187
+   }
+  },
+  {
+   "timestamp": "1772295150555",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 38.16956478118897,
+   "tokenUsage": {
+    "inputTokens": 4,
+    "outputTokens": 117,
+    "cacheReadTokens": 691533,
+    "cacheWriteTokens": 1026,
+    "totalCents": 17.445977725982665
+   }
+  },
+  {
+   "timestamp": "1772294264643",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 715.1250024414062,
+   "tokenUsage": {
+    "inputTokens": 44,
+    "outputTokens": 33038,
+    "cacheReadTokens": 11206908,
+    "cacheWriteTokens": 50168,
+    "totalCents": 377.3457061767578
+   }
+  },
+  {
+   "timestamp": "1772294067182",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 32.96489791870117,
+   "tokenUsage": {
+    "inputTokens": 4,
+    "outputTokens": 133,
+    "cacheReadTokens": 588651,
+    "cacheWriteTokens": 1497,
+    "totalCents": 15.30475643157959
+   }
+  },
+  {
+   "timestamp": "1772292800441",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 1239.2445068359375,
+   "tokenUsage": {
+    "inputTokens": 95,
+    "outputTokens": 62904,
+    "cacheReadTokens": 18941869,
+    "cacheWriteTokens": 106149,
+    "totalCents": 667.4804278564453
+   }
+  },
+  {
+   "timestamp": "1772291930036",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 582.1810595703125,
+   "tokenUsage": {
+    "inputTokens": 59,
+    "outputTokens": 46824,
+    "cacheReadTokens": 6585525,
+    "cacheWriteTokens": 181500,
+    "totalCents": 378.32232177734375
+   }
+  },
+  {
+   "timestamp": "1772291765318",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 8.000946226119995,
+   "tokenUsage": {
+    "inputTokens": 21804,
+    "outputTokens": 1728,
+    "cacheReadTokens": 25766,
+    "totalCents": 8.000946226119995
+   }
+  },
+  {
+   "timestamp": "1772291589911",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 28.483285942077636,
+   "tokenUsage": {
+    "inputTokens": 1536,
+    "outputTokens": 3591,
+    "cacheReadTokens": 426785,
+    "totalCents": 28.483285942077636
+   }
+  },
+  {
+   "timestamp": "1772291455936",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 106.7960838317871,
+   "tokenUsage": {
+    "inputTokens": 8165,
+    "outputTokens": 6542,
+    "cacheReadTokens": 1673645,
+    "totalCents": 106.7960838317871
+   }
+  },
+  {
+   "timestamp": "1772291270388",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 57.0254076385498,
+   "tokenUsage": {
+    "inputTokens": 132825,
+    "outputTokens": 1355,
+    "cacheReadTokens": 405469,
+    "totalCents": 57.0254076385498
+   }
+  },
+  {
+   "timestamp": "1772291215929",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 161.09779815673826,
+   "tokenUsage": {
+    "inputTokens": 13,
+    "outputTokens": 9568,
+    "cacheReadTokens": 646211,
+    "cacheWriteTokens": 164104,
+    "totalCents": 136.56807830810547
+   }
+  },
+  {
+   "timestamp": "1772216719491",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-high (Auto Intelligence)",
+   "chargedCents": 143.10481750488282,
+   "tokenUsage": {
+    "inputTokens": 6123,
+    "outputTokens": 5273,
+    "cacheReadTokens": 1108033,
+    "totalCents": 143.10481750488282
+   }
+  },
+  {
+   "timestamp": "1772216713467",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-high (Auto Intelligence)",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1772216476110",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 13.54287649154663,
+   "tokenUsage": {
+    "inputTokens": 2,
+    "outputTokens": 79,
+    "cacheReadTokens": 236416,
+    "cacheWriteTokens": 986,
+    "totalCents": 6.437840938568115
+   }
+  },
+  {
+   "timestamp": "1772215240604",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-high (Auto Intelligence)",
+   "chargedCents": 83.92401290893554,
+   "tokenUsage": {
+    "inputTokens": 2437,
+    "outputTokens": 1606,
+    "cacheReadTokens": 672269,
+    "totalCents": 83.92401290893554
+   }
+  },
+  {
+   "timestamp": "1772215201384",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-high (Auto Intelligence)",
+   "chargedCents": 66.44606231689453,
+   "tokenUsage": {
+    "inputTokens": 3063,
+    "outputTokens": 1361,
+    "cacheReadTokens": 526650,
+    "totalCents": 66.44606231689453
+   }
+  },
+  {
+   "timestamp": "1772215119758",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-high (Auto Intelligence)",
+   "chargedCents": 65.91344947814942,
+   "tokenUsage": {
+    "inputTokens": 6115,
+    "outputTokens": 1743,
+    "cacheReadTokens": 505412,
+    "totalCents": 65.91344947814942
+   }
+  },
+  {
+   "timestamp": "1772214922661",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 1013.3587854003906,
+   "tokenUsage": {
+    "inputTokens": 84,
+    "outputTokens": 70570,
+    "cacheReadTokens": 12952595,
+    "cacheWriteTokens": 230423,
+    "totalCents": 616.834984741211
+   }
+  },
+  {
+   "timestamp": "1772214915119",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-high (Auto Intelligence)",
+   "chargedCents": 89.32717803955077,
+   "tokenUsage": {
+    "inputTokens": 121857,
+    "outputTokens": 587,
+    "cacheReadTokens": 251964,
+    "totalCents": 89.32717803955077
+   }
+  },
+  {
+   "timestamp": "1772214834292",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "Claude Fable 5.1 (Auto Intelligence)",
+   "chargedCents": 275.4810989379883,
+   "tokenUsage": {
+    "inputTokens": 6,
+    "outputTokens": 1393,
+    "cacheReadTokens": 487725,
+    "cacheWriteTokens": 155924,
+    "totalCents": 256.1825259399414
+   }
+  },
+  {
+   "timestamp": "1772214751264",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-high (Auto Intelligence)",
+   "chargedCents": 87.53896987915039,
+   "tokenUsage": {
+    "inputTokens": 119362,
+    "outputTokens": 655,
+    "cacheReadTokens": 246186,
+    "totalCents": 87.53896987915039
+   }
+  },
+  {
+   "timestamp": "1772214724715",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 102.68231506347657,
+   "tokenUsage": {
+    "inputTokens": 7,
+    "outputTokens": 4431,
+    "cacheReadTokens": 437519,
+    "cacheWriteTokens": 108836,
+    "totalCents": 86.20365333557129
+   }
+  },
+  {
+   "timestamp": "1772214167303",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "claude-opus-5-5-medium",
+   "chargedCents": 130.80240829467772,
+   "tokenUsage": {
+    "inputTokens": 15,
+    "outputTokens": 10060,
+    "cacheReadTokens": 908260,
+    "cacheWriteTokens": 91528,
+    "totalCents": 100.58932388305664
+   }
+  },
+  {
+   "timestamp": "1772214156886",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "Claude Fable 5.1 (Auto Intelligence)",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1772211706363",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "Claude Fable 5.1 (Auto Intelligence)",
+   "chargedCents": 162.87936752319337,
+   "tokenUsage": {
+    "inputTokens": 10,
+    "outputTokens": 4236,
+    "cacheReadTokens": 439345,
+    "cacheWriteTokens": 72818,
+    "totalCents": 147.42946823120116
+   }
+  },
+  {
+   "timestamp": "1772209002313",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 79.7649700164795,
+   "tokenUsage": {
+    "inputTokens": 33,
+    "outputTokens": 8611,
+    "cacheReadTokens": 434756,
+    "cacheWriteTokens": 39889,
+    "totalCents": 65.3059162902832
+   }
+  },
+  {
+   "timestamp": "1772208950749",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "gpt-5.6-sol-medium",
+   "chargedCents": 4.913484110832214,
+   "tokenUsage": {
+    "inputTokens": 2,
+    "outputTokens": 200,
+    "cacheWriteTokens": 7047,
+    "totalCents": 4.696601061820984
+   }
+  },
+  {
+   "timestamp": "1772033521797",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "Grok 4.5 (Auto Intelligence)",
+   "chargedCents": 21.521567859649657,
+   "tokenUsage": {
+    "inputTokens": 2090,
+    "outputTokens": 1538,
+    "cacheReadTokens": 332855,
+    "totalCents": 21.521567859649657
+   }
+  },
+  {
+   "timestamp": "1772033443863",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "Grok 4.5 (Auto Intelligence)",
+   "chargedCents": 33.3185139465332,
+   "tokenUsage": {
+    "inputTokens": 110324,
+    "outputTokens": 479,
+    "cacheReadTokens": 109780,
+    "totalCents": 33.3185139465332
+   }
+  },
+  {
+   "timestamp": "1772015117170",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 16.916436443328855,
+   "tokenUsage": {
+    "inputTokens": 1255,
+    "outputTokens": 420,
+    "cacheReadTokens": 272655,
+    "totalCents": 16.916436443328855
+   }
+  },
+  {
+   "timestamp": "1772014574511",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 130.6551072692871,
+   "tokenUsage": {
+    "inputTokens": 80150,
+    "outputTokens": 5560,
+    "cacheReadTokens": 1796230,
+    "totalCents": 130.6551072692871
+   }
+  },
+  {
+   "timestamp": "1772014562937",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 124.26263931274414,
+   "tokenUsage": {
+    "inputTokens": 6156,
+    "outputTokens": 3539,
+    "cacheReadTokens": 2009623,
+    "totalCents": 124.26263931274414
+   }
+  },
+  {
+   "timestamp": "1772012857187",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 16.924027614593506,
+   "tokenUsage": {
+    "inputTokens": 1128,
+    "outputTokens": 1546,
+    "cacheReadTokens": 259772,
+    "totalCents": 16.924027614593506
+   }
+  },
+  {
+   "timestamp": "1772012855426",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 14.291063556671142,
+   "tokenUsage": {
+    "inputTokens": 963,
+    "outputTokens": 492,
+    "cacheReadTokens": 229087,
+    "totalCents": 14.291063556671142
+   }
+  },
+  {
+   "timestamp": "1772012475102",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 22.982006454467772,
+   "tokenUsage": {
+    "inputTokens": 74294,
+    "outputTokens": 775,
+    "cacheReadTokens": 77612,
+    "totalCents": 22.982006454467772
+   }
+  },
+  {
+   "timestamp": "1772012106112",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 32.97541305541992,
+   "tokenUsage": {
+    "inputTokens": 3373,
+    "outputTokens": 2390,
+    "cacheReadTokens": 508925,
+    "totalCents": 32.97541305541992
+   }
+  },
+  {
+   "timestamp": "1772011979320",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 15.525056343078614,
+   "tokenUsage": {
+    "inputTokens": 828,
+    "outputTokens": 381,
+    "cacheReadTokens": 251574,
+    "totalCents": 15.525056343078614
+   }
+  },
+  {
+   "timestamp": "1772011565945",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 138.54888946533202,
+   "tokenUsage": {
+    "inputTokens": 11830,
+    "outputTokens": 6820,
+    "cacheReadTokens": 2186318,
+    "totalCents": 138.54888946533202
+   }
+  },
+  {
+   "timestamp": "1772011467388",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 21.724070568084716,
+   "tokenUsage": {
+    "inputTokens": 5292,
+    "outputTokens": 838,
+    "cacheReadTokens": 331840,
+    "totalCents": 21.724070568084716
+   }
+  },
+  {
+   "timestamp": "1772011302230",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 235.71539154052735,
+   "tokenUsage": {
+    "inputTokens": 97922,
+    "outputTokens": 15130,
+    "cacheReadTokens": 3366107,
+    "totalCents": 235.71539154052735
+   }
+  },
+  {
+   "timestamp": "1772011295558",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 45.68836372375488,
+   "tokenUsage": {
+    "inputTokens": 107635,
+    "outputTokens": 1133,
+    "cacheReadTokens": 319425,
+    "totalCents": 45.68836372375488
+   }
+  },
+  {
+   "timestamp": "1772010944806",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 81.61837982177734,
+   "tokenUsage": {
+    "inputTokens": 168625,
+    "outputTokens": 4236,
+    "cacheReadTokens": 638694,
+    "totalCents": 81.61837982177734
+   }
+  },
+  {
+   "timestamp": "1772010802081",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 4.008430128097534,
+   "tokenUsage": {
+    "inputTokens": 8003,
+    "outputTokens": 644,
+    "cacheReadTokens": 27250,
+    "totalCents": 4.008430128097534
+   }
+  },
+  {
+   "timestamp": "1772010455942",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 35.274036979675294,
+   "tokenUsage": {
+    "inputTokens": 42120,
+    "outputTokens": 2644,
+    "cacheReadTokens": 389307,
+    "totalCents": 35.274036979675294
+   }
+  },
+  {
+   "timestamp": "1772009914097",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-high-fast",
+   "chargedCents": 72.78771453857422,
+   "tokenUsage": {
+    "inputTokens": 73044,
+    "outputTokens": 3154,
+    "cacheReadTokens": 278199,
+    "totalCents": 72.78771453857422
+   }
+  },
+  {
+   "timestamp": "1772004548582",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 6.834552040100098,
+   "tokenUsage": {
+    "inputTokens": 849,
+    "outputTokens": 744,
+    "cacheReadTokens": 101894,
+    "totalCents": 6.834552040100098
+   }
+  },
+  {
+   "timestamp": "1772004401417",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 42.8510005569458,
+   "tokenUsage": {
+    "inputTokens": 101297,
+    "outputTokens": 752,
+    "cacheReadTokens": 301935,
+    "totalCents": 42.8510005569458
+   }
+  },
+  {
+   "timestamp": "1771997808701",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 104.90479614257812,
+   "tokenUsage": {
+    "inputTokens": 85524,
+    "outputTokens": 9217,
+    "cacheReadTokens": 1300500,
+    "totalCents": 104.90479614257812
+   }
+  },
+  {
+   "timestamp": "1771992026567",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 50.15362655639648,
+   "tokenUsage": {
+    "inputTokens": 6842,
+    "outputTokens": 3210,
+    "cacheReadTokens": 772289,
+    "totalCents": 50.15362655639648
+   }
+  },
+  {
+   "timestamp": "1771991760361",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 35.37273334503174,
+   "tokenUsage": {
+    "inputTokens": 71380,
+    "outputTokens": 3907,
+    "cacheReadTokens": 258757,
+    "totalCents": 35.37273334503174
+   }
+  },
+  {
+   "timestamp": "1771991383219",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 61.83567054748535,
+   "tokenUsage": {
+    "inputTokens": 61221,
+    "outputTokens": 5499,
+    "cacheReadTokens": 722552,
+    "totalCents": 61.83567054748535
+   }
+  },
+  {
+   "timestamp": "1771990676973",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 154.6964859008789,
+   "tokenUsage": {
+    "inputTokens": 15462,
+    "outputTokens": 4452,
+    "cacheReadTokens": 2470061,
+    "totalCents": 154.6964859008789
+   }
+  },
+  {
+   "timestamp": "1771990333910",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 35.36981494903564,
+   "tokenUsage": {
+    "inputTokens": 78348,
+    "outputTokens": 1554,
+    "cacheReadTokens": 259069,
+    "totalCents": 35.36981494903564
+   }
+  },
+  {
+   "timestamp": "1771990193739",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 26.492575073242186,
+   "tokenUsage": {
+    "inputTokens": 86941,
+    "outputTokens": 368,
+    "cacheReadTokens": 90573,
+    "totalCents": 26.492575073242186
+   }
+  },
+  {
+   "timestamp": "1771990127749",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 33.9327360534668,
+   "tokenUsage": {
+    "inputTokens": 92915,
+    "outputTokens": 436,
+    "cacheReadTokens": 190203,
+    "totalCents": 33.9327360534668
+   }
+  },
+  {
+   "timestamp": "1771985593208",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 94.73093353271484,
+   "tokenUsage": {
+    "inputTokens": 89749,
+    "outputTokens": 5046,
+    "cacheReadTokens": 1163626,
+    "totalCents": 94.73093353271484
+   }
+  },
+  {
+   "timestamp": "1771927891257",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 129.34796661376953,
+   "tokenUsage": {
+    "inputTokens": 191061,
+    "outputTokens": 11106,
+    "cacheReadTokens": 1264193,
+    "totalCents": 129.34796661376953
+   }
+  },
+  {
+   "timestamp": "1771926000538",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 147.93668991088867,
+   "tokenUsage": {
+    "inputTokens": 7058,
+    "outputTokens": 7821,
+    "cacheReadTokens": 2350286,
+    "totalCents": 147.93668991088867
+   }
+  },
+  {
+   "timestamp": "1771924565924",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 278.25321868896486,
+   "tokenUsage": {
+    "inputTokens": 124607,
+    "outputTokens": 7197,
+    "cacheReadTokens": 4065469,
+    "totalCents": 278.25321868896486
+   }
+  },
+  {
+   "timestamp": "1771924250266",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 89.81905586242675,
+   "tokenUsage": {
+    "inputTokens": 4246,
+    "outputTokens": 2046,
+    "cacheReadTokens": 1459549,
+    "totalCents": 89.81905586242675
+   }
+  },
+  {
+   "timestamp": "1771923865999",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 126.58010192871093,
+   "tokenUsage": {
+    "inputTokens": 10145,
+    "outputTokens": 4409,
+    "cacheReadTokens": 2021960,
+    "totalCents": 126.58010192871093
+   }
+  },
+  {
+   "timestamp": "1771923713572",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 177.58636795043944,
+   "tokenUsage": {
+    "inputTokens": 25512,
+    "outputTokens": 12648,
+    "cacheReadTokens": 2714061,
+    "totalCents": 177.58636795043944
+   }
+  },
+  {
+   "timestamp": "1771923698804",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1771923576839",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 7.841514225006104,
+   "tokenUsage": {
+    "inputTokens": 45,
+    "outputTokens": 2031,
+    "cacheReadTokens": 106501,
+    "totalCents": 7.841514225006104
+   }
+  },
+  {
+   "timestamp": "1771923522967",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1771923449729",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 24.37718074798584,
+   "tokenUsage": {
+    "inputTokens": 98823,
+    "outputTokens": 404,
+    "cacheReadTokens": 7261,
+    "totalCents": 24.37718074798584
+   }
+  },
+  {
+   "timestamp": "1771921148367",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 307.1607775878906,
+   "tokenUsage": {
+    "inputTokens": 111515,
+    "outputTokens": 17999,
+    "cacheReadTokens": 4471329,
+    "totalCents": 307.1607775878906
+   }
+  },
+  {
+   "timestamp": "1771921140097",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1771920882028",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 21.677495975494384,
+   "tokenUsage": {
+    "inputTokens": 70715,
+    "outputTokens": 138,
+    "cacheReadTokens": 77768,
+    "totalCents": 21.677495975494384
+   }
+  },
+  {
+   "timestamp": "1771920617539",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 111.34149673461914,
+   "tokenUsage": {
+    "inputTokens": 158872,
+    "outputTokens": 9524,
+    "cacheReadTokens": 1111000,
+    "totalCents": 111.34149673461914
+   }
+  },
+  {
+   "timestamp": "1771920590479",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 6.450572023391723,
+   "tokenUsage": {
+    "inputTokens": 23042,
+    "outputTokens": 1127,
+    "cacheReadTokens": 2108,
+    "totalCents": 6.450572023391723
+   }
+  },
+  {
+   "timestamp": "1771917135115",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 9.227784347534179,
+   "tokenUsage": {
+    "inputTokens": 12115,
+    "outputTokens": 2228,
+    "cacheReadTokens": 79017,
+    "totalCents": 9.227784347534179
+   }
+  },
+  {
+   "timestamp": "1771916987152",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 19.59013412475586,
+   "tokenUsage": {
+    "inputTokens": 53664,
+    "outputTokens": 3103,
+    "cacheReadTokens": 75503,
+    "totalCents": 19.59013412475586
+   }
+  },
+  {
+   "timestamp": "1771915932775",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1771915863260",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 4.621191992759704,
+   "tokenUsage": {
+    "inputTokens": 510,
+    "outputTokens": 137,
+    "cacheReadTokens": 73551,
+    "totalCents": 4.621191992759704
+   }
+  },
+  {
+   "timestamp": "1771913609511",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 840.6881213378906,
+   "tokenUsage": {
+    "inputTokens": 817637,
+    "outputTokens": 50607,
+    "cacheReadTokens": 10172028,
+    "totalCents": 840.6881213378906
+   }
+  },
+  {
+   "timestamp": "1771913575335",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1771913426296",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 52.60015022277832,
+   "tokenUsage": {
+    "inputTokens": 10473,
+    "outputTokens": 1751,
+    "cacheReadTokens": 816170,
+    "totalCents": 52.60015022277832
+   }
+  },
+  {
+   "timestamp": "1771912923117",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 24.93679988861084,
+   "tokenUsage": {
+    "inputTokens": 8348,
+    "outputTokens": 1509,
+    "cacheReadTokens": 365258,
+    "totalCents": 24.93679988861084
+   }
+  },
+  {
+   "timestamp": "1771912853662",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 5.986875658035278,
+   "tokenUsage": {
+    "inputTokens": 221,
+    "outputTokens": 879,
+    "cacheReadTokens": 88621,
+    "totalCents": 5.986875658035278
+   }
+  },
+  {
+   "timestamp": "1771912163681",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 89.07883590698242,
+   "tokenUsage": {
+    "inputTokens": 22589,
+    "outputTokens": 12130,
+    "cacheReadTokens": 1252794,
+    "totalCents": 89.07883590698242
+   }
+  },
+  {
+   "timestamp": "1771912150271",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1771911848383",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 21.57515022277832,
+   "tokenUsage": {
+    "inputTokens": 12467,
+    "outputTokens": 1882,
+    "cacheReadTokens": 288115,
+    "totalCents": 21.57515022277832
+   }
+  },
+  {
+   "timestamp": "1771911268873",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 37.58259124755859,
+   "tokenUsage": {
+    "inputTokens": 51827,
+    "outputTokens": 1361,
+    "cacheReadTokens": 404454,
+    "totalCents": 37.58259124755859
+   }
+  },
+  {
+   "timestamp": "1771910461004",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 271.8614859008789,
+   "tokenUsage": {
+    "inputTokens": 322971,
+    "outputTokens": 24002,
+    "cacheReadTokens": 2963526,
+    "totalCents": 271.8614859008789
+   }
+  },
+  {
+   "timestamp": "1771907408156",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 8.072194213867187,
+   "tokenUsage": {
+    "inputTokens": 314,
+    "outputTokens": 96,
+    "cacheReadTokens": 132502,
+    "totalCents": 8.072194213867187
+   }
+  },
+  {
+   "timestamp": "1771907024704",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 289.29199584960935,
+   "tokenUsage": {
+    "inputTokens": 42637,
+    "outputTokens": 6227,
+    "cacheReadTokens": 4589464,
+    "totalCents": 289.29199584960935
+   }
+  },
+  {
+   "timestamp": "1771906356477",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 13.686770401000976,
+   "tokenUsage": {
+    "inputTokens": 1818,
+    "outputTokens": 400,
+    "cacheReadTokens": 216672,
+    "totalCents": 13.686770401000976
+   }
+  },
+  {
+   "timestamp": "1771905583256",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 179.38712966918945,
+   "tokenUsage": {
+    "inputTokens": 71488,
+    "outputTokens": 11718,
+    "cacheReadTokens": 2571409,
+    "totalCents": 179.38712966918945
+   }
+  },
+  {
+   "timestamp": "1771905396096",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 49.503052597045894,
+   "tokenUsage": {
+    "inputTokens": 8505,
+    "outputTokens": 1444,
+    "cacheReadTokens": 775959,
+    "totalCents": 49.503052597045894
+   }
+  },
+  {
+   "timestamp": "1771905211167",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 32.86985511779785,
+   "tokenUsage": {
+    "inputTokens": 9997,
+    "outputTokens": 1967,
+    "cacheReadTokens": 485736,
+    "totalCents": 32.86985511779785
+   }
+  },
+  {
+   "timestamp": "1771905188360",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1771905086949",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 23.932172698974608,
+   "tokenUsage": {
+    "inputTokens": 3438,
+    "outputTokens": 1479,
+    "cacheReadTokens": 368460,
+    "totalCents": 23.932172698974608
+   }
+  },
+  {
+   "timestamp": "1771904989228",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 12.269109420776367,
+   "tokenUsage": {
+    "inputTokens": 2528,
+    "outputTokens": 1721,
+    "cacheReadTokens": 174275,
+    "totalCents": 12.269109420776367
+   }
+  },
+  {
+   "timestamp": "1771904814549",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 21.498354358673094,
+   "tokenUsage": {
+    "inputTokens": 56155,
+    "outputTokens": 1664,
+    "cacheReadTokens": 114700,
+    "totalCents": 21.498354358673094
+   }
+  },
+  {
+   "timestamp": "1771904742087",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 23.331384124755857,
+   "tokenUsage": {
+    "inputTokens": 53829,
+    "outputTokens": 678,
+    "cacheReadTokens": 166467,
+    "totalCents": 23.331384124755857
+   }
+  },
+  {
+   "timestamp": "1771904357606",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 61.71916305541992,
+   "tokenUsage": {
+    "inputTokens": 107014,
+    "outputTokens": 2805,
+    "cacheReadTokens": 569750,
+    "totalCents": 61.71916305541992
+   }
+  },
+  {
+   "timestamp": "1771904265352",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 12.860118026733398,
+   "tokenUsage": {
+    "inputTokens": 2114,
+    "outputTokens": 939,
+    "cacheReadTokens": 195200,
+    "totalCents": 12.860118026733398
+   }
+  },
+  {
+   "timestamp": "1771904084535",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 14.807320289611816,
+   "tokenUsage": {
+    "inputTokens": 5046,
+    "outputTokens": 4033,
+    "cacheReadTokens": 178881,
+    "totalCents": 14.807320289611816
+   }
+  },
+  {
+   "timestamp": "1771903923294",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 9.598477725982665,
+   "tokenUsage": {
+    "inputTokens": 3414,
+    "outputTokens": 1982,
+    "cacheReadTokens": 122976,
+    "totalCents": 9.598477725982665
+   }
+  },
+  {
+   "timestamp": "1771903911324",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 0.0,
+   "tokenUsage": {}
+  },
+  {
+   "timestamp": "1771903377341",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 32.74210567474365,
+   "tokenUsage": {
+    "inputTokens": 105931,
+    "outputTokens": 3919,
+    "cacheReadTokens": 76440,
+    "totalCents": 32.74210567474365
+   }
+  },
+  {
+   "timestamp": "1771903281278",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 38.90943664550781,
+   "tokenUsage": {
+    "inputTokens": 118457,
+    "outputTokens": 1228,
+    "cacheReadTokens": 161704,
+    "totalCents": 38.90943664550781
+   }
+  },
+  {
+   "timestamp": "1771903072336",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 23.453001594543455,
+   "tokenUsage": {
+    "inputTokens": 31846,
+    "outputTokens": 2612,
+    "cacheReadTokens": 233225,
+    "totalCents": 23.453001594543455
+   }
+  },
+  {
+   "timestamp": "1771902961078",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 10.658438177108764,
+   "tokenUsage": {
+    "inputTokens": 3994,
+    "outputTokens": 1039,
+    "cacheReadTokens": 149679,
+    "totalCents": 10.658438177108764
+   }
+  },
+  {
+   "timestamp": "1771902837232",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 10.147730016708374,
+   "tokenUsage": {
+    "inputTokens": 27278,
+    "outputTokens": 2177,
+    "cacheReadTokens": 34355,
+    "totalCents": 10.147730016708374
+   }
+  },
+  {
+   "timestamp": "1771902690439",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 11.021247987747191,
+   "tokenUsage": {
+    "inputTokens": 30964,
+    "outputTokens": 838,
+    "cacheReadTokens": 50284,
+    "totalCents": 11.021247987747191
+   }
+  },
+  {
+   "timestamp": "1771901750986",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 23.266998405456544,
+   "tokenUsage": {
+    "inputTokens": 4340,
+    "outputTokens": 1886,
+    "cacheReadTokens": 348861,
+    "totalCents": 23.266998405456544
+   }
+  },
+  {
+   "timestamp": "1771901672899",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 62.20315452575684,
+   "tokenUsage": {
+    "inputTokens": 84965,
+    "outputTokens": 1434,
+    "cacheReadTokens": 682497,
+    "totalCents": 62.20315452575684
+   }
+  },
+  {
+   "timestamp": "1771901598878",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS",
+   "model": "grok-4.7-xhigh",
+   "chargedCents": 41.28237663269043,
+   "tokenUsage": {
+    "inputTokens": 84388,
+    "outputTokens": 676,
+    "cacheReadTokens": 344255,
+    "totalCents": 41.28237663269043
+   }
+  },
+  {
+   "timestamp": "1771944666000",
+   "kind": "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED",
+   "model": "x",
+   "chargedCents": 72.27
+  },
+  {
+   "timestamp": "1771987866000",
+   "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+   "model": "synthetic-a",
+   "chargedCents": "-",
+   "tokenUsage": {
+    "totalCents": 9.125,
+    "inputTokens": 61,
+    "outputTokens": "7"
+   }
+  },
+  {
+   "timestamp": "1771987866005",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_PRO",
+   "model": null,
+   "chargedCents": ""
+  },
+  {
+   "timestamp": "0",
+   "kind": "USAGE_EVENT_KIND_USAGE_BASED",
+   "model": "synthetic-a",
+   "chargedCents": 2.19
+  },
+  {
+   "timestamp": "not-a-number",
+   "kind": "USAGE_EVENT_KIND_INCLUDED_IN_PRO",
+   "model": "synthetic-b",
+   "chargedCents": 3.1025,
+   "tokenUsage": {
+    "cacheReadTokens": 6,
+    "cacheWriteTokens": 1
+   }
+  },
+  {
+   "timestamp": "1772160666000",
+   "kind": "SOMETHING_ELSE",
+   "model": "synthetic-c",
+   "chargedCents": 0.73
+  },
+  {
+   "timestamp": "1772160666000",
+   "kind": null,
+   "model": "synthetic-c",
+   "chargedCents": 0.73
+  }
+ ],
+ "aggregation": {
+  "eventCount": 178,
+  "kindTotalsCents": {
+   "USAGE_EVENT_KIND_INCLUDED_IN_BUSINESS": 16502.90001855374,
+   "USAGE_EVENT_KIND_ERRORED_NOT_CHARGED": 72.27,
+   "USAGE_EVENT_KIND_USAGE_BASED": 11.315,
+   "USAGE_EVENT_KIND_INCLUDED_IN_PRO": 3.1025,
+   "SOMETHING_ELSE": 0.73,
+   "unknown": 0.73
+  },
+  "onDemandModels": [
+   {
+    "model": "synthetic-a",
+    "costCents": 11.315,
+    "costDollars": 0.1132,
+    "sharePercent": 100.0,
+    "eventCount": 2,
+    "inputTokens": 61,
+    "outputTokens": 7,
+    "cacheReadTokens": 0,
+    "cacheWriteTokens": 0
+   }
+  ],
+  "includedModels": [
+   {
+    "model": "claude-opus-5-5-medium",
+    "costCents": 7000.947098751069,
+    "costDollars": 70.0095,
+    "sharePercent": 42.41,
+    "eventCount": 32,
+    "inputTokens": 603,
+    "outputTokens": 383354,
+    "cacheReadTokens": 84906556,
+    "cacheWriteTokens": 2386221
+   },
+   {
+    "model": "grok-4.7-xhigh",
+    "costCents": 6993.332201247214,
+    "costDollars": 69.9333,
+    "sharePercent": 42.37,
+    "eventCount": 99,
+    "inputTokens": 5973587,
+    "outputTokens": 394160,
+    "cacheReadTokens": 88250615,
+    "cacheWriteTokens": 0
+   },
+   {
+    "model": "Claude Fable 5.1 (Auto Intelligence)",
+    "costCents": 1034.9836207580568,
+    "costDollars": 10.3498,
+    "sharePercent": 6.27,
+    "eventCount": 4,
+    "inputTokens": 22,
+    "outputTokens": 11606,
+    "cacheReadTokens": 1124287,
+    "cacheWriteTokens": 588463
+   },
+   {
+    "model": "gpt-5.6-sol-medium",
+    "costCents": 688.044919166565,
+    "costDollars": 6.8804,
+    "sharePercent": 4.17,
+    "eventCount": 23,
+    "inputTokens": 259,
+    "outputTokens": 30623,
+    "cacheReadTokens": 6398078,
+    "cacheWriteTokens": 184652
+   },
+   {
+    "model": "grok-4.7-high (Auto Intelligence)",
+    "costCents": 647.1064537811279,
+    "costDollars": 6.4711,
+    "sharePercent": 3.92,
+    "eventCount": 8,
+    "inputTokens": 408150,
+    "outputTokens": 15359,
+    "cacheReadTokens": 3590431,
+    "cacheWriteTokens": 0
+   },
+   {
+    "model": "grok-4.7-high-fast",
+    "costCents": 72.78771453857422,
+    "costDollars": 0.7279,
+    "sharePercent": 0.44,
+    "eventCount": 1,
+    "inputTokens": 73044,
+    "outputTokens": 3154,
+    "cacheReadTokens": 278199,
+    "cacheWriteTokens": 0
+   },
+   {
+    "model": "Grok 4.5 (Auto Intelligence)",
+    "costCents": 54.84008180618286,
+    "costDollars": 0.5484,
+    "sharePercent": 0.33,
+    "eventCount": 2,
+    "inputTokens": 112414,
+    "outputTokens": 2017,
+    "cacheReadTokens": 442635,
+    "cacheWriteTokens": 0
+   },
+   {
+    "model": "Claude Fable 5.1 (Auto Balanced)",
+    "costCents": 10.857928504943848,
+    "costDollars": 0.1086,
+    "sharePercent": 0.07,
+    "eventCount": 2,
+    "inputTokens": 2,
+    "outputTokens": 105,
+    "cacheReadTokens": 6062,
+    "cacheWriteTokens": 6463
+   },
+   {
+    "model": "synthetic-b",
+    "costCents": 3.1025,
+    "costDollars": 0.031,
+    "sharePercent": 0.02,
+    "eventCount": 1,
+    "inputTokens": 0,
+    "outputTokens": 0,
+    "cacheReadTokens": 6,
+    "cacheWriteTokens": 1
+   },
+   {
+    "model": "unknown",
+    "costCents": 0.0,
+    "costDollars": 0.0,
+    "sharePercent": 0.0,
+    "eventCount": 1,
+    "inputTokens": 0,
+    "outputTokens": 0,
+    "cacheReadTokens": 0,
+    "cacheWriteTokens": 0
+   }
+  ],
+  "models": [
+   {
+    "model": "claude-opus-5-5-medium",
+    "onDemandCostCents": 0.0,
+    "onDemandCostDollars": 0.0,
+    "includedCostCents": 7000.947098751069,
+    "includedCostDollars": 70.0095,
+    "totalCostCents": 7000.947098751069,
+    "totalCostDollars": 70.0095,
+    "eventCount": 32,
+    "inputTokens": 603,
+    "outputTokens": 383354,
+    "cacheReadTokens": 84906556,
+    "cacheWriteTokens": 2386221
+   },
+   {
+    "model": "grok-4.7-xhigh",
+    "onDemandCostCents": 0.0,
+    "onDemandCostDollars": 0.0,
+    "includedCostCents": 6993.332201247214,
+    "includedCostDollars": 69.9333,
+    "totalCostCents": 6993.332201247214,
+    "totalCostDollars": 69.9333,
+    "eventCount": 99,
+    "inputTokens": 5973587,
+    "outputTokens": 394160,
+    "cacheReadTokens": 88250615,
+    "cacheWriteTokens": 0
+   },
+   {
+    "model": "Claude Fable 5.1 (Auto Intelligence)",
+    "onDemandCostCents": 0.0,
+    "onDemandCostDollars": 0.0,
+    "includedCostCents": 1034.9836207580568,
+    "includedCostDollars": 10.3498,
+    "totalCostCents": 1034.9836207580568,
+    "totalCostDollars": 10.3498,
+    "eventCount": 4,
+    "inputTokens": 22,
+    "outputTokens": 11606,
+    "cacheReadTokens": 1124287,
+    "cacheWriteTokens": 588463
+   },
+   {
+    "model": "gpt-5.6-sol-medium",
+    "onDemandCostCents": 0.0,
+    "onDemandCostDollars": 0.0,
+    "includedCostCents": 688.044919166565,
+    "includedCostDollars": 6.8804,
+    "totalCostCents": 688.044919166565,
+    "totalCostDollars": 6.8804,
+    "eventCount": 23,
+    "inputTokens": 259,
+    "outputTokens": 30623,
+    "cacheReadTokens": 6398078,
+    "cacheWriteTokens": 184652
+   },
+   {
+    "model": "grok-4.7-high (Auto Intelligence)",
+    "onDemandCostCents": 0.0,
+    "onDemandCostDollars": 0.0,
+    "includedCostCents": 647.1064537811279,
+    "includedCostDollars": 6.4711,
+    "totalCostCents": 647.1064537811279,
+    "totalCostDollars": 6.4711,
+    "eventCount": 8,
+    "inputTokens": 408150,
+    "outputTokens": 15359,
+    "cacheReadTokens": 3590431,
+    "cacheWriteTokens": 0
+   },
+   {
+    "model": "grok-4.7-high-fast",
+    "onDemandCostCents": 0.0,
+    "onDemandCostDollars": 0.0,
+    "includedCostCents": 72.78771453857422,
+    "includedCostDollars": 0.7279,
+    "totalCostCents": 72.78771453857422,
+    "totalCostDollars": 0.7279,
+    "eventCount": 1,
+    "inputTokens": 73044,
+    "outputTokens": 3154,
+    "cacheReadTokens": 278199,
+    "cacheWriteTokens": 0
+   },
+   {
+    "model": "Grok 4.5 (Auto Intelligence)",
+    "onDemandCostCents": 0.0,
+    "onDemandCostDollars": 0.0,
+    "includedCostCents": 54.84008180618286,
+    "includedCostDollars": 0.5484,
+    "totalCostCents": 54.84008180618286,
+    "totalCostDollars": 0.5484,
+    "eventCount": 2,
+    "inputTokens": 112414,
+    "outputTokens": 2017,
+    "cacheReadTokens": 442635,
+    "cacheWriteTokens": 0
+   },
+   {
+    "model": "synthetic-a",
+    "onDemandCostCents": 11.315,
+    "onDemandCostDollars": 0.1132,
+    "includedCostCents": 0.0,
+    "includedCostDollars": 0.0,
+    "totalCostCents": 11.315,
+    "totalCostDollars": 0.1132,
+    "eventCount": 2,
+    "inputTokens": 61,
+    "outputTokens": 7,
+    "cacheReadTokens": 0,
+    "cacheWriteTokens": 0
+   },
+   {
+    "model": "Claude Fable 5.1 (Auto Balanced)",
+    "onDemandCostCents": 0.0,
+    "onDemandCostDollars": 0.0,
+    "includedCostCents": 10.857928504943848,
+    "includedCostDollars": 0.1086,
+    "totalCostCents": 10.857928504943848,
+    "totalCostDollars": 0.1086,
+    "eventCount": 2,
+    "inputTokens": 2,
+    "outputTokens": 105,
+    "cacheReadTokens": 6062,
+    "cacheWriteTokens": 6463
+   },
+   {
+    "model": "synthetic-b",
+    "onDemandCostCents": 0.0,
+    "onDemandCostDollars": 0.0,
+    "includedCostCents": 3.1025,
+    "includedCostDollars": 0.031,
+    "totalCostCents": 3.1025,
+    "totalCostDollars": 0.031,
+    "eventCount": 1,
+    "inputTokens": 0,
+    "outputTokens": 0,
+    "cacheReadTokens": 6,
+    "cacheWriteTokens": 1
+   },
+   {
+    "model": "unknown",
+    "onDemandCostCents": 0.0,
+    "onDemandCostDollars": 0.0,
+    "includedCostCents": 0.0,
+    "includedCostDollars": 0.0,
+    "totalCostCents": 0.0,
+    "totalCostDollars": 0.0,
+    "eventCount": 1,
+    "inputTokens": 0,
+    "outputTokens": 0,
+    "cacheReadTokens": 0,
+    "cacheWriteTokens": 0
+   }
+  ],
+  "daily": [
+   {
+    "date": "2026-02-24",
+    "onDemandCostCents": 0.0,
+    "includedCostCents": 3812.6331463098522,
+    "totalCostCents": 3812.6331463098522,
+    "eventCount": 54,
+    "topOnDemandModel": null,
+    "onDemandModels": []
+   },
+   {
+    "date": "2026-02-25",
+    "onDemandCostCents": 9.125,
+    "includedCostCents": 1711.912033319473,
+    "totalCostCents": 1721.037033319473,
+    "eventCount": 31,
+    "topOnDemandModel": "synthetic-a",
+    "onDemandModels": [
+     {
+      "model": "synthetic-a",
+      "costCents": 9.125
+     }
+    ]
+   },
+   {
+    "date": "2026-02-28",
+    "onDemandCostCents": 0.0,
+    "includedCostCents": 5250.59878452778,
+    "totalCostCents": 5250.59878452778,
+    "eventCount": 25,
+    "topOnDemandModel": null,
+    "onDemandModels": []
+   },
+   {
+    "date": "2026-03-01",
+    "onDemandCostCents": 0.0,
+    "includedCostCents": 5727.756054396629,
+    "totalCostCents": 5727.756054396629,
+    "eventCount": 63,
+    "topOnDemandModel": null,
+    "onDemandModels": []
+   }
+  ],
+  "onDemandTotalCents": 11.315,
+  "includedTotalCents": 16506.002518553734
+ },
+ "summary": {
+  "planName": "Pro",
+  "planPrice": "$20/mo",
+  "includedLimitCents": 2000.0,
+  "includedUsedCents": 1450.0,
+  "includedRemainingCents": 550.0,
+  "bonusSpendCents": 6120.0,
+  "individualLimitCents": 20000.0,
+  "individualUsedCents": 0.0,
+  "individualRemainingCents": 20000.0,
+  "pooledUsedCents": 31250.0,
+  "pooledLimitCents": null,
+  "pooledRemainingCents": null,
+  "onDemandTotalSpendCents": 31250.0,
+  "unifiedUsedCents": 1450.0,
+  "unifiedUsedDollars": 14.5,
+  "onDemandEventCostCents": 11.315,
+  "onDemandEventCostDollars": 0.11,
+  "includedEventCostCents": 16506.002518553734,
+  "includedEventCostDollars": 165.06,
+  "autoPercentUsed": 12.5,
+  "apiPercentUsed": 64.25,
+  "totalPercentUsed": 21.75,
+  "modelCount": 11,
+  "topOnDemandModel": "synthetic-a",
+  "topModel": "claude-opus-5-5-medium",
+  "displayMessage": "You've used 12% of your included usage",
+  "billingCycleStart": "1771901466000",
+  "billingCycleEnd": "1774493466000",
+  "eventCount": 178
+ },
+ "summaryWithoutEvents": {
+  "planName": "Pro",
+  "planPrice": "$20/mo",
+  "includedLimitCents": 2000.0,
+  "includedUsedCents": 1450.0,
+  "includedRemainingCents": 550.0,
+  "bonusSpendCents": 6120.0,
+  "individualLimitCents": 20000.0,
+  "individualUsedCents": 0.0,
+  "individualRemainingCents": 20000.0,
+  "pooledUsedCents": 31250.0,
+  "pooledLimitCents": null,
+  "pooledRemainingCents": null,
+  "onDemandTotalSpendCents": 31250.0,
+  "unifiedUsedCents": 1450.0,
+  "unifiedUsedDollars": 14.5,
+  "onDemandEventCostCents": 0.0,
+  "onDemandEventCostDollars": 0.0,
+  "includedEventCostCents": 0.0,
+  "includedEventCostDollars": 0.0,
+  "autoPercentUsed": 12.5,
+  "apiPercentUsed": 64.25,
+  "totalPercentUsed": 21.75,
+  "modelCount": 0,
+  "topOnDemandModel": null,
+  "topModel": null,
+  "displayMessage": "You've used 12% of your included usage",
+  "billingCycleStart": "1771901466000",
+  "billingCycleEnd": "1774493466000",
+  "eventCount": null
+ },
+ "legacyAggregation": {
+  "totalCostCents": 1500,
+  "aggregations": [
+   {
+    "modelIntent": "legacy-a",
+    "totalCents": 1000,
+    "inputTokens": "10",
+    "outputTokens": 5,
+    "tier": 1
+   },
+   {
+    "model": "legacy-b",
+    "totalCents": 500,
+    "cacheReadTokens": 3
+   },
+   {
+    "totalCents": null
+   }
+  ]
+ },
+ "legacyModels": [
+  {
+   "model": "legacy-a",
+   "tier": 1,
+   "costCents": 1000.0,
+   "costDollars": 10.0,
+   "sharePercent": 66.67,
+   "inputTokens": 10,
+   "outputTokens": 5,
+   "cacheReadTokens": 0,
+   "cacheWriteTokens": 0
+  },
+  {
+   "model": "legacy-b",
+   "tier": null,
+   "costCents": 500.0,
+   "costDollars": 5.0,
+   "sharePercent": 33.33,
+   "inputTokens": 0,
+   "outputTokens": 0,
+   "cacheReadTokens": 3,
+   "cacheWriteTokens": 0
+  },
+  {
+   "model": "unknown",
+   "tier": null,
+   "costCents": 0.0,
+   "costDollars": 0.0,
+   "sharePercent": 0.0,
+   "inputTokens": 0,
+   "outputTokens": 0,
+   "cacheReadTokens": 0,
+   "cacheWriteTokens": 0
+  }
+ ]
+}

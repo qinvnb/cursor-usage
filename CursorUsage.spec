@@ -3,13 +3,16 @@ from pathlib import Path
 
 root = Path(SPECPATH)
 icon = root / "assets" / "app.ico"
+dashboard = root / "web" / "dist" / "index.html"
+if not dashboard.is_file():
+    raise SystemExit("web/dist/index.html is missing: run `npm ci && npm run build` first")
 
 a = Analysis(
     [str(root / "run.py")],
     pathex=[str(root)],
     binaries=[],
     datas=[
-        (str(root / "web"), "web"),
+        (str(root / "web" / "dist"), "web/dist"),
         (str(root / "assets"), "assets"),
     ],
     hiddenimports=[
@@ -18,27 +21,32 @@ a = Analysis(
         "PIL",
         "PIL.Image",
         "PIL.ImageDraw",
+        "PIL.ImageChops",
         "cursor_usage_app",
-        "cursor_usage_app.fetch",
-        "cursor_usage_app.server",
-        "cursor_usage_app.usage",
-        "cursor_usage_app.tray",
+        "cursor_usage_app.bridge",
         "cursor_usage_app.store",
-        "cursor_usage_app.ball_tk",
-        "cursor_usage_app.win_ui",
+        "cursor_usage_app.tray",
+        "cursor_usage_app.updates",
         "cursor_usage_app.autostart",
-        "cursor_usage_app.component_supervisor",
         "cursor_usage_app.diagnostics",
         "cursor_usage_app.instance",
         "cursor_usage_app.logging_setup",
-        "cursor_usage_app.taskbar_widget",
+        "cursor_usage_app.i18n",
+        "cursor_usage_app.icon_art",
+        "cursor_usage_app.native",
+        "cursor_usage_app.native.win",
+        "cursor_usage_app.native.ball",
+        "cursor_usage_app.native.taskbar",
+        "cursor_usage_app.native.ui_thread",
         "uiautomation",
         "comtypes",
     ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    # The floating ball is a native window now; Tk is no longer used.
+    # numpy (~26 MB) is only an optional extra of comtypes / Pillow; nothing here needs it.
+    excludes=["tkinter", "_tkinter", "PIL.ImageTk", "numpy"],
     noarchive=False,
 )
 pyz = PYZ(a.pure)

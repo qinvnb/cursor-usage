@@ -1,0 +1,138 @@
+{
+  "name": "cursor-usage",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "0.1.0",
+  "publisher": "qinvnb",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qinvnb/cursor-usage.git"
+  },
+  "homepage": "https://github.com/qinvnb/cursor-usage#readme",
+  "bugs": "https://github.com/qinvnb/cursor-usage/issues",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "cursor",
+    "usage",
+    "quota",
+    "billing",
+    "用量"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "cursorUsage.openDashboard",
+        "title": "%command.openDashboard%",
+        "category": "Cursor Usage"
+      },
+      {
+        "command": "cursorUsage.refresh",
+        "title": "%command.refresh%",
+        "category": "Cursor Usage"
+      },
+      {
+        "command": "cursorUsage.copySummary",
+        "title": "%command.copySummary%",
+        "category": "Cursor Usage"
+      }
+    ],
+    "configuration": {
+      "title": "Cursor Usage",
+      "properties": {
+        "cursorUsage.language": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "zh",
+            "en"
+          ],
+          "enumDescriptions": [
+            "%config.language.auto%",
+            "中文",
+            "English"
+          ],
+          "description": "%config.language%"
+        },
+        "cursorUsage.refreshSeconds": {
+          "type": "number",
+          "default": 120,
+          "minimum": 30,
+          "maximum": 3600,
+          "markdownDescription": "%config.refreshSeconds%"
+        },
+        "cursorUsage.statusBar": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "ondemand",
+            "included",
+            "both",
+            "hidden"
+          ],
+          "enumDescriptions": [
+            "%config.statusBar.auto%",
+            "%config.statusBar.ondemand%",
+            "%config.statusBar.included%",
+            "%config.statusBar.both%",
+            "%config.statusBar.hidden%"
+          ],
+          "description": "%config.statusBar%"
+        },
+        "cursorUsage.alerts.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.alerts.enabled%"
+        },
+        "cursorUsage.alerts.thresholds": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "default": [
+            80,
+            95
+          ],
+          "description": "%config.alerts.thresholds%"
+        },
+        "cursorUsage.onDemandBudget": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0,
+          "description": "%config.onDemandBudget%"
+        },
+        "cursorUsage.stateDbPath": {
+          "type": "string",
+          "default": "",
+          "description": "%config.stateDbPath%"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "package": "node build.mjs && vsce package --no-dependencies --out ../../release",
+    "publish:ovsx": "node build.mjs && npx --yes ovsx publish --no-dependencies"
+  },
+  "devDependencies": {
+    "@cursor-usage/core": "*",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.2.0",
+    "esbuild": "^0.24.0"
+  }
+}

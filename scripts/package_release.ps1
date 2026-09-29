@@ -1,11 +1,16 @@
 param(
-    [string]$Version = "1.0.0",
+    # Defaults to __version__ in cursor_usage_app/__init__.py.
+    [string]$Version = "",
     [switch]$SkipBuild
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+if (-not $Version) {
+    $match = Select-String -Path (Join-Path $root "cursor_usage_app\__init__.py") -Pattern '__version__\s*=\s*"([^"]+)"'
+    $Version = $match.Matches[0].Groups[1].Value
+}
 
 if (-not $SkipBuild) {
     & (Join-Path $PSScriptRoot "build_exe.ps1")

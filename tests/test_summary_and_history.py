@@ -47,6 +47,44 @@ class SummaryFileTests(unittest.TestCase):
         self.assertNotIn("fetchedAt", summary)
         self.assertEqual(store.load_summary(), summary)
 
+    def test_widget_summary_carries_included_pools(self) -> None:
+        legacy = json.loads(json.dumps(_report("1000", 123)))
+        store.save_usage(legacy)
+        summary = store.load_summary()
+        self.assertIsNone(summary["autoPercentUsed"])
+        self.assertIsNone(summary["apiPercentUsed"])
+
+        split = _report("1000", 456)
+        split["periodUsage"] = {"planUsage": {"autoPercentUsed": 10.37, "apiPercentUsed": 100}}
+        split["summary"].update(autoPercentUsed=10.37, apiPercentUsed=100)
+        store.save_usage(split)
+        summary = store.load_summary()
+        self.assertEqual((summary["autoPercentUsed"], summary["apiPercentUsed"]), (10.4, 100.0))
+
+        from cursor_usage_app import i18n
+        from cursor_usage_app.tray import format_usage_lines
+
+        try:
+            i18n.set_language("zh")
+            self.assertEqual(
+                format_usage_lines(summary)[1:],
+                ["套餐内 Cursor 模型（Auto）已用 10%", "套餐内其他模型（API）已用 100%"],
+            )
+            i18n.set_language("en")
+            self.assertEqual(
+                format_usage_lines(summary)[1:],
+                ["Included Cursor models (Auto): 10% used", "Included other models (API): 100% used"],
+            )
+            with_tokens = {**summary, "tokens": {"total": 259_876_000}}
+            self.assertEqual(format_usage_lines(with_tokens)[-1], "Tokens this cycle: 259.9M")
+        finally:
+            i18n.set_language("zh")
+
+    def test_language_setting_is_validated(self) -> None:
+        self.assertEqual(store.load_settings()["language"], "auto")
+        self.assertEqual(store.save_settings({"language": "en"})["language"], "en")
+        self.assertEqual(store.save_settings({"language": "fr"})["language"], "auto")
+
     def test_unchanged_report_skips_rewrite_but_stays_fresh(self) -> None:
         self.assertTrue(store.save_usage(_report("1000", 123, fetched="a")))
         before = store.usage_path().stat().st_mtime_ns
@@ -67,21 +105,17 @@ class SummaryFileTests(unittest.TestCase):
         store.summary_path().unlink()
         self.assertEqual(store.load_summary()["individualUsedCents"], 77)
 
-    def test_cycle_rollover_records_previous_cycle_once(self) -> None:
-        store.save_usage(_report("1000", 100))
-        store.save_usage(_report("1000", 900))
-        store.save_usage(_report("5000", 10))
-        store.save_usage(_report("5000", 20))
-        cycles = store.load_history()["cycles"]
-        self.assertEqual(len(cycles), 1)
-        self.assertEqual(cycles[0]["cycleStart"], "1000")
-        self.assertEqual(cycles[0]["individualUsedCents"], 900)
-        self.assertEqual(cycles[0]["totalCents"], 1400)
+    def test_summary_from_core_is_stored_as_given(self) -> None:
+        summary = {"individualUsedCents": 5, "individualLimitCents": 9, "fromCore": True}
+        store.save_usage(_report("1000", 5), summary)
+        self.assertEqual(store.load_summary(), summary)
 
-    def test_history_is_capped(self) -> None:
-        for i in range(store.HISTORY_LIMIT + 5):
-            store.save_usage(_report(str(1000 + i), 1))
-        self.assertEqual(len(store.load_history()["cycles"]), store.HISTORY_LIMIT)
+    def test_history_is_stored_and_capped(self) -> None:
+        cycles = [{"cycleStart": str(i), "totalCents": i} for i in range(store.HISTORY_LIMIT + 5)]
+        store.save_history(cycles)
+        stored = store.load_history()["cycles"]
+        self.assertEqual(len(stored), store.HISTORY_LIMIT)
+        self.assertEqual(stored[-1]["cycleStart"], str(store.HISTORY_LIMIT + 4))
 
     @unittest.skipUnless(sys.platform == "win32", "DPAPI is Windows-only")
     def test_credentials_are_encrypted_at_rest(self) -> None:

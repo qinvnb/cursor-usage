@@ -1,0 +1,20 @@
+{
+  "displayName": "Cursor Usage · Dashboard",
+  "description": "See Cursor included usage (Cursor models and other models) and on-demand spend in the status bar, and open a full usage dashboard (daily trends, model costs, activity by hour, past cycles). Data stays on your machine.",
+  "command.openDashboard": "Open Usage Dashboard",
+  "command.refresh": "Refresh Usage Now",
+  "command.copySummary": "Copy Usage Summary",
+  "config.language": "Display language for the status bar, alerts and dashboard",
+  "config.language.auto": "Follow Cursor's display language",
+  "config.refreshSeconds": "Auto refresh interval in seconds. A full sync with model details runs every 10 minutes. Increase it if the desktop app runs too, to avoid duplicate fetches.",
+  "config.statusBar": "What the status bar item shows",
+  "config.statusBar.auto": "Included usage while the other-models (API) pool lasts, then on-demand",
+  "config.statusBar.ondemand": "On-demand only",
+  "config.statusBar.included": "Included only",
+  "config.statusBar.both": "Both",
+  "config.statusBar.hidden": "Hide the status bar item",
+  "config.alerts.enabled": "Notify when usage crosses a threshold or will run out within 3 days at the current pace (once per level per cycle)",
+  "config.alerts.thresholds": "Alert thresholds (percent)",
+  "config.onDemandBudget": "Personal on-demand budget in USD. When it is below the Cursor limit, alerts use it instead; 0 = off",
+  "config.stateDbPath": "Path to Cursor's state.vscdb sign-in data; leave empty to find it automatically"
+}

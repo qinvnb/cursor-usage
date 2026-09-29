@@ -1,4 +1,4 @@
-# Build Windows EXE for Cursor Usage dashboard
+# Build the Windows folder app: TypeScript core + dashboard, then PyInstaller.
 $ErrorActionPreference = "Stop"
 Set-Location (Split-Path -Parent $PSScriptRoot)
 
@@ -9,12 +9,19 @@ if (Test-Path $packageData) {
     Copy-Item $packageData $dataBackup -Recurse
 }
 
+npm ci --no-fund --no-audit
+if ($LASTEXITCODE -ne 0) { throw "npm ci failed ($LASTEXITCODE)" }
+npm test
+if ($LASTEXITCODE -ne 0) { throw "TypeScript tests failed ($LASTEXITCODE)" }
+npm run build
+if ($LASTEXITCODE -ne 0) { throw "Dashboard build failed ($LASTEXITCODE)" }
+
 python scripts\make_icon.py
 if ($LASTEXITCODE -ne 0) { throw "Icon generation failed ($LASTEXITCODE)" }
 python -m pip install -r requirements-dev.txt
 if ($LASTEXITCODE -ne 0) { throw "Dependency installation failed ($LASTEXITCODE)" }
 python -m unittest discover -s tests -p "test_*.py"
-if ($LASTEXITCODE -ne 0) { throw "Tests failed ($LASTEXITCODE)" }
+if ($LASTEXITCODE -ne 0) { throw "Python tests failed ($LASTEXITCODE)" }
 python -m PyInstaller --noconfirm CursorUsage.spec
 if ($LASTEXITCODE -ne 0) { throw "PyInstaller failed ($LASTEXITCODE)" }
 if (Test-Path $dataBackup) {
@@ -25,4 +32,3 @@ if (Test-Path $dataBackup) {
 
 Write-Host ""
 Write-Host "Build complete: $(Join-Path (Get-Location) 'dist\CursorUsage\CursorUsage.exe')"
-Write-Host "Cursor must be signed in before launch."

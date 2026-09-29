@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convenience launcher: python run.py [--ball]"""
+"""Convenience launcher: python run.py [--show-window] [--debug]"""
 
 import sys
 

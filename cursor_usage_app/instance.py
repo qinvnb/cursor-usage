@@ -238,15 +238,22 @@ class SingleInstance:
             except OSError:
                 pass
 
+        # The listener thread owns its pipe handle and closes it itself; here we
+        # only cancel the blocking ConnectNamedPipe/ReadFile. Closing it from
+        # both sides could close a recycled handle value (e.g. a semaphore).
         with self._pipe_lock:
             pipe = self._pipe_handle
-            self._pipe_handle = None
         if pipe is not None and sys.platform == "win32":
-            _win_close(pipe)
+            _win_cancel(pipe)
 
         thread = self._thread
         if thread is not None and thread is not threading.current_thread():
             thread.join(max(0.0, join_timeout))
+            if thread.is_alive() and sys.platform == "win32":
+                with self._pipe_lock:
+                    pipe, self._pipe_handle = self._pipe_handle, None
+                if pipe is not None:
+                    _win_close(pipe)
 
         if self._mutex_handle is not None and sys.platform == "win32":
             _win_release_mutex(self._mutex_handle)
@@ -369,11 +376,13 @@ class SingleInstance:
             except (OSError, IPCError, ValueError):
                 pass
             finally:
-                _win_disconnect(pipe)
                 with self._pipe_lock:
-                    if self._pipe_handle == pipe:
+                    owned = self._pipe_handle == pipe
+                    if owned:
                         self._pipe_handle = None
-                _win_close(pipe)
+                if owned:
+                    _win_disconnect(pipe)
+                    _win_close(pipe)
 
     def _send_windows(self, frame: bytes, timeout: float) -> dict[str, Any]:
         pipe = _win_open_pipe(self.pipe_name, timeout)
