@@ -13,6 +13,8 @@ if (!existsSync(dashboard)) {
 }
 
 mkdirSync(join(here, "media"), { recursive: true });
+// `vsce package --out ../../release` writes a *file* named "release" unless the folder exists.
+mkdirSync(join(root, "release"), { recursive: true });
 copyFileSync(dashboard, join(here, "media", "dashboard.html"));
 copyFileSync(join(root, "assets", "app.png"), join(here, "media", "icon.png"));
 copyFileSync(join(root, "LICENSE"), join(here, "LICENSE"));
