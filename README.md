@@ -69,9 +69,6 @@ Cursor 插件（`packages/extension`）复用同一个 core 与看板：引擎�
 也可以在 [Open VSX](https://open-vsx.org/extension/qinvnb/cursor-usage) 查看。安装后状态栏右侧会出现用量，
 点击或执行命令 `Cursor Usage: 打开用量看板`。设置项见 [packages/extension/README.md](packages/extension/README.md)。
 
-离线安装：从 [GitHub Releases](https://github.com/qinvnb/cursor-usage/releases/latest) 下载 `.vsix`，
-在扩展面板选择“从 VSIX 安装…”。
-
 > Cursor 3.x 的 glass 模式会禁用第三方插件，请在 classic 模式下使用。
 
 ### 桌面版
