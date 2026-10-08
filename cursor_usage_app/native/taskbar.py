@@ -69,6 +69,10 @@ ID_REFRESH = 1002
 ID_CLOSE = 1003
 TIMER_MAINTENANCE = 1
 TIMER_INTERVAL_MS = 2000
+TIMER_RAISE = 2
+# Explorer re-stacks the taskbar a moment after the foreground changes (Win+D,
+# app switches), pushing the widget below it; re-assert over the next second.
+RAISE_DELAYS_MS = (50, 200, 500, 1000)
 POLL_SECONDS = 4.0
 LAYOUT_CHECK_SECONDS = 30.0
 UIA_CACHE_SECONDS = 30.0
@@ -78,6 +82,9 @@ _UIA_LOCK = threading.Lock()
 _UIA_CACHE: tuple[int, float, list[dict[str, Any]], str | None] | None = None
 _UIA_WORKER: threading.Thread | None = None
 _UIA_NOTIFY_HWND = 0
+# Screen rect of the last embedded widget. UIA reports the widget itself as a
+# taskbar element, and cached geometry can outlive a destroyed widget.
+_LAST_WIDGET_RECT: tuple[int, int, int, int] | None = None
 _LAST_STATUS: dict[str, Any] | None = None
 _SETTINGS_CACHE: dict[str, Any] | None = None
 
@@ -189,6 +196,7 @@ if IS_WINDOWS:
     user32.DestroyIcon.argtypes = [wintypes.HICON]
     user32.RegisterClassExW.restype = wintypes.ATOM
     user32.RegisterClassExW.argtypes = [ctypes.POINTER(WNDCLASSEXW)]
+    user32.UnregisterClassW.argtypes = [wintypes.LPCWSTR, wintypes.HINSTANCE]
     user32.BeginPaint.restype = wintypes.HDC
     user32.BeginPaint.argtypes = [wintypes.HWND, ctypes.POINTER(PAINTSTRUCT)]
     user32.EndPaint.argtypes = [wintypes.HWND, ctypes.POINTER(PAINTSTRUCT)]
@@ -718,6 +726,7 @@ class TaskbarWidget:
         self.layout: dict[str, int] | None = None
         self.usage: tuple[float, float] | None = None
         self.reason = "starting"
+        self.raise_step = 0
         self.app_icon = 0
         self.app_icon_size = 0
         self._wndproc = WNDPROC(self._window_proc)
@@ -733,10 +742,13 @@ class TaskbarWidget:
         wc.hCursor = cursor
         wc.lpszClassName = self.class_name
         atom = user32.RegisterClassExW(ctypes.byref(wc))
+        if not atom and ctypes.get_last_error() == 1410:  # ERROR_CLASS_ALREADY_EXISTS
+            # A leftover class would route messages to the previous instance's
+            # WNDPROC: the new widget would never paint or run its timers.
+            user32.UnregisterClassW(self.class_name, self.hinstance)
+            atom = user32.RegisterClassExW(ctypes.byref(wc))
         if not atom:
-            error = ctypes.get_last_error()
-            if error != 1410:  # ERROR_CLASS_ALREADY_EXISTS
-                raise ctypes.WinError(error)
+            raise ctypes.WinError(ctypes.get_last_error())
 
     def _create_controller(self) -> None:
         self.controller_hwnd = int(
@@ -805,8 +817,9 @@ class TaskbarWidget:
         if self._fullscreen():
             self._hide("fullscreen", retry=False)
             return False
+        global _LAST_WIDGET_RECT
         current_rect = _rect(self.widget_hwnd) if self.widget_hwnd else None
-        layout, reason = _embedding_layout(taskbar, ignore_rect=current_rect)
+        layout, reason = _embedding_layout(taskbar, ignore_rect=current_rect or _LAST_WIDGET_RECT)
         if not layout:
             if taskbar != self.taskbar_hwnd:
                 self._destroy_widget()
@@ -872,6 +885,12 @@ class TaskbarWidget:
             gdi32.DeleteObject(region)
         user32.ShowWindow(self.widget_hwnd, SW_SHOWNA)
         user32.InvalidateRect(self.widget_hwnd, None, False)
+        _LAST_WIDGET_RECT = (
+            screen_x,
+            screen_y,
+            screen_x + layout["width"],
+            screen_y + layout["height"],
+        )
         self.layout = dict(layout)
         self.visible = True
         self.reason = "ok"
@@ -898,6 +917,35 @@ class TaskbarWidget:
         self.usage = usage
         if self.widget_hwnd and user32.IsWindow(self.widget_hwnd):
             user32.InvalidateRect(self.widget_hwnd, None, False)
+
+    def check_fullscreen(self) -> None:
+        """Called on every foreground change: hide/restore promptly, keep above the taskbar."""
+        if not self.running or not self.controller_hwnd:
+            return
+        if self._fullscreen():
+            if self.visible:
+                self._hide("fullscreen", retry=False)
+            return
+        if not self.visible and self.reason == "fullscreen":
+            self._attach()
+        elif self.visible:
+            keep_topmost(self.widget_hwnd)
+
+    def on_foreground_changed(self) -> None:
+        self.check_fullscreen()
+        if self.visible and self.controller_hwnd:
+            self.raise_step = 0
+            user32.SetTimer(self.controller_hwnd, TIMER_RAISE, RAISE_DELAYS_MS[0], None)
+
+    def _raise_tick(self) -> None:
+        if self.visible:
+            keep_topmost(self.widget_hwnd)
+        self.raise_step += 1
+        if self.visible and self.raise_step < len(RAISE_DELAYS_MS):
+            delay = RAISE_DELAYS_MS[self.raise_step] - RAISE_DELAYS_MS[self.raise_step - 1]
+            user32.SetTimer(self.controller_hwnd, TIMER_RAISE, delay, None)
+        else:
+            user32.KillTimer(self.controller_hwnd, TIMER_RAISE)
 
     def _poll_visible(self) -> None:
         """Cheap periodic check while embedded: fullscreen + periodic layout."""
@@ -1160,7 +1208,10 @@ class TaskbarWidget:
                 self._attach(force=msg == WM_DPICHANGED)
                 return 0
             if msg == WM_TIMER and hwnd == self.controller_hwnd:
-                self._maintenance()
+                if wparam == TIMER_RAISE:
+                    self._raise_tick()
+                else:
+                    self._maintenance()
                 return 0
             if msg == WM_PAINT and hwnd == self.widget_hwnd:
                 self._paint(hwnd)
@@ -1234,6 +1285,7 @@ class TaskbarWidget:
         _UIA_NOTIFY_HWND = 0
         if self.controller_hwnd and user32.IsWindow(self.controller_hwnd):
             user32.KillTimer(self.controller_hwnd, TIMER_MAINTENANCE)
+            user32.KillTimer(self.controller_hwnd, TIMER_RAISE)
             user32.DestroyWindow(self.controller_hwnd)
         if self.widget_hwnd and user32.IsWindow(self.widget_hwnd):
             user32.DestroyWindow(self.widget_hwnd)

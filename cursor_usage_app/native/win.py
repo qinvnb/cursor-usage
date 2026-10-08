@@ -15,6 +15,10 @@ if IS_WINDOWS:
     user32 = ctypes.WinDLL("user32", use_last_error=True)
     gdi32 = ctypes.WinDLL("gdi32", use_last_error=True)
     shell32 = ctypes.WinDLL("shell32", use_last_error=True)
+    dwmapi = ctypes.WinDLL("dwmapi")
+    dwmapi.DwmGetWindowAttribute.argtypes = [wintypes.HWND, wintypes.DWORD, c_void_p, wintypes.DWORD]
+    user32.GetWindowLongW.argtypes = [wintypes.HWND, ctypes.c_int]
+    user32.GetWindowLongW.restype = ctypes.c_long
 
     user32.SetWindowPos.argtypes = [
         wintypes.HWND,
@@ -149,7 +153,33 @@ def clear_topmost(hwnd: int) -> None:
 
 
 _OWN_TITLES = {"Cursor 用量", "Cursor Usage", "Cursor 用量悬浮球"}
-_SHELL_CLASSES = {"progman", "workerw", "shell_traywnd", "shell_secondarytraywnd", "dv2controlhost"}
+# Shell surfaces that cover the whole monitor while switching windows (Alt+Tab,
+# Task View, the activation hand-off window) or showing Start / Search panels.
+_SHELL_CLASSES = {
+    "progman",
+    "workerw",
+    "shell_traywnd",
+    "shell_secondarytraywnd",
+    "dv2controlhost",
+    "foregroundstaging",
+    "xamlexplorerhostislandwindow",
+    "multitaskingviewframe",
+    "taskswitcherwnd",
+    "windows.ui.core.corewindow",
+}
+WS_EX_TRANSPARENT = 0x00000020
+WS_EX_NOACTIVATE = 0x08000000
+DWMWA_CLOAKED = 14
+
+
+def _is_cloaked(hwnd: Any) -> bool:
+    cloaked = ctypes.c_int(0)
+    try:
+        if dwmapi.DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, byref(cloaked), sizeof(cloaked)) != 0:
+            return False
+    except Exception:
+        return False
+    return cloaked.value != 0
 
 
 def is_fullscreen_session() -> bool:
@@ -175,6 +205,11 @@ def is_fullscreen_session() -> bool:
             return False
         user32.GetWindowTextW(hwnd, buf, 256)
         if buf.value in _OWN_TITLES:
+            return False
+        # Click-through overlays and hidden (cloaked) windows do not cover anything.
+        if user32.GetWindowLongW(hwnd, -20) & (WS_EX_TRANSPARENT | WS_EX_NOACTIVATE):
+            return False
+        if _is_cloaked(hwnd):
             return False
         win = RECT()
         if not user32.GetWindowRect(hwnd, byref(win)):
