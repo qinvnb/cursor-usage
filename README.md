@@ -65,7 +65,7 @@ Cursor 插件（`packages/extension`）复用同一个 core 与看板：引擎�
 
 ### Cursor 插件
 
-在 Cursor 的扩展面板搜索 `qinvnb.cursor-usage`（显示名 **Cursor Usage · Dashboard**）并安装，
+在 Cursor 的扩展面板搜索 `qinvnb.cursor-usage`（显示名 **Cursor Usage**，发布者 qinvnb）并安装，
 也可以在 [Open VSX](https://open-vsx.org/extension/qinvnb/cursor-usage) 查看。安装后状态栏右侧会出现用量，
 点击或执行命令 `Cursor Usage: 打开用量看板`。设置项见 [packages/extension/README.md](packages/extension/README.md)。
 

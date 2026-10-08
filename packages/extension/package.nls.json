@@ -1,5 +1,5 @@
 {
-  "displayName": "Cursor Usage · Dashboard",
+  "displayName": "Cursor Usage",
   "description": "See Cursor included usage (Cursor models and other models) and on-demand spend in the status bar, and open a full usage dashboard (daily trends, model costs, activity by hour, past cycles). Data stays on your machine.",
   "command.openDashboard": "Open Usage Dashboard",
   "command.refresh": "Refresh Usage Now",

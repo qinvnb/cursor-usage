@@ -1,4 +1,4 @@
-# Cursor Usage · Dashboard
+# Cursor Usage
 
 See your Cursor usage without leaving the editor. The status bar shows your included usage or
 on-demand spend at a glance; click it for a full dashboard. English and 中文.

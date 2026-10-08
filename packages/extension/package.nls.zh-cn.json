@@ -1,5 +1,5 @@
 {
-  "displayName": "Cursor Usage · 用量看板",
+  "displayName": "Cursor Usage",
   "description": "在状态栏查看 Cursor 套餐内额度（Cursor 模型 / 其他模型）与个人按需用量，打开完整的用量看板（每日趋势、模型成本、使用时段、历史周期）。数据只保存在本机。",
   "command.openDashboard": "打开用量看板",
   "command.refresh": "立即刷新用量",

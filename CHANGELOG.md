@@ -2,6 +2,12 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/)。
 
+## 2.1.1 - 2026-10-08
+
+- 修复任务栏组件在 Windows 11 默认居中对齐（注册表没有 `TaskbarAl`）时不嵌入、
+  状态显示 `unknown-taskbar-alignment` 的问题
+- 扩展 0.1.1：显示名去掉后缀，统一为 `Cursor Usage`
+
 ## 2.1.0 - 2026-09-29
 
 界面

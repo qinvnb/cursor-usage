@@ -399,7 +399,11 @@ def _dpi_for_window(hwnd: int) -> int:
 
 
 def _taskbar_alignment() -> int | None:
-    """Return 1 for centered, 0 for left; unknown is intentionally unsafe."""
+    """Return 1 for centered, 0 for left, None if the registry is unreadable.
+
+    Windows 11 only writes ``TaskbarAl`` after the user changes the setting,
+    so a missing value means the default centered layout.
+    """
     try:
         import winreg
 
@@ -407,6 +411,8 @@ def _taskbar_alignment() -> int | None:
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_name) as key:
             value, _kind = winreg.QueryValueEx(key, "TaskbarAl")
         return int(value)
+    except FileNotFoundError:
+        return 1
     except Exception:
         return None
 
@@ -555,9 +561,6 @@ def _embedding_layout(
         return None, uia_error
     if ignore_rect is not None:
         occupied = [item for item in occupied if item["rect"] != ignore_rect]
-    alignment = _taskbar_alignment()
-    if alignment not in (0, 1):
-        return None, "unknown-taskbar-alignment"
     search_right = right - margin
     x_screen = _first_free_x(
         left=left,
