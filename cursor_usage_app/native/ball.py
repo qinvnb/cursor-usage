@@ -8,9 +8,7 @@ it started. All methods run on the native UI thread.
 from __future__ import annotations
 
 import ctypes
-import os
 from ctypes import wintypes
-from pathlib import Path
 from typing import Any, Callable
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
@@ -26,6 +24,7 @@ from .win import (
     is_fullscreen_session,
     keep_topmost,
     paint_layered,
+    ui_font,
 )
 
 WM_DESTROY = 0x0002
@@ -112,19 +111,6 @@ def _usd(cents: float) -> str:
     return f"${float(cents or 0) / 100.0:.0f}"
 
 
-def _font(size: int, bold: bool = False) -> ImageFont.ImageFont:
-    fonts = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
-    names = ["segoeuib.ttf", "msyhbd.ttc", "segoeui.ttf"] if bold else ["segoeui.ttf", "msyh.ttc"]
-    for name in names:
-        path = fonts / name
-        if path.is_file():
-            try:
-                return ImageFont.truetype(str(path), size)
-            except OSError:
-                continue
-    return ImageFont.load_default()
-
-
 def ring_color(ratio: float) -> tuple[int, int, int, int]:
     if ratio >= 0.9:
         return (220, 38, 38, 255)
@@ -159,8 +145,8 @@ def render_ball(size: int, summary: dict[str, Any] | None, scale: float, *, font
         draw.arc(track, start=-90, end=-90 + ratio * 360, fill=ring_color(ratio), width=ring_w)
 
     fs = max(8, int(font_size * scale))
-    title = _font(fs * ss, bold=True)
-    body = _font(max(8, int(fs * 0.74)) * ss)
+    title = ui_font(fs * ss, bold=True)
+    body = ui_font(max(8, int(fs * 0.74)) * ss)
     cx = cy = big / 2
     gap = max(10, int(fs * 0.95)) * ss
 

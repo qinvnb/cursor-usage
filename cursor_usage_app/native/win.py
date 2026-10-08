@@ -3,13 +3,30 @@
 from __future__ import annotations
 
 import ctypes
+import os
 import sys
 from ctypes import byref, c_void_p, sizeof, wintypes
+from functools import lru_cache
+from pathlib import Path
 from typing import Any, Callable
 
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageFont
 
 IS_WINDOWS = sys.platform == "win32"
+
+
+@lru_cache(maxsize=16)
+def ui_font(size: int, bold: bool = False) -> ImageFont.ImageFont:
+    fonts = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
+    names = ["segoeuib.ttf", "msyhbd.ttc", "segoeui.ttf"] if bold else ["segoeui.ttf", "msyh.ttc"]
+    for name in names:
+        path = fonts / name
+        if path.is_file():
+            try:
+                return ImageFont.truetype(str(path), size)
+            except OSError:
+                continue
+    return ImageFont.load_default()
 
 if IS_WINDOWS:
     user32 = ctypes.WinDLL("user32", use_last_error=True)

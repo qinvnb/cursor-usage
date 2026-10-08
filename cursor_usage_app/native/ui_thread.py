@@ -145,7 +145,7 @@ class NativeUI:
         msg = wintypes.MSG()
         # Force the thread message queue to exist before anyone posts to it.
         user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 0)
-        install_foreground_hook(self._on_foreground_changed)
+        install_foreground_hook(self._on_foreground)
         timer = user32.SetTimer(None, TIMER_FULLSCREEN, FULLSCREEN_FALLBACK_MS, None)
         self._sync_components()
         self._ready.set()
@@ -177,25 +177,13 @@ class NativeUI:
             except Exception:
                 logger.exception("native UI task failed")
 
-    def _on_foreground_changed(self) -> None:
+    def _on_foreground(self) -> None:
+        # The taskbar widget lives inside the taskbar and needs no fullscreen handling.
         if self._ball is not None:
             try:
                 self._ball.check_fullscreen()
             except Exception:
                 logger.exception("fullscreen check failed")
-        if self._dock is not None:
-            try:
-                self._dock.on_foreground_changed()
-            except Exception:
-                logger.exception("taskbar raise failed")
-
-    def _on_foreground(self) -> None:
-        for component in (self._ball, self._dock):
-            if component is not None:
-                try:
-                    component.check_fullscreen()
-                except Exception:
-                    logger.exception("fullscreen check failed")
 
     def _sync_components(self) -> None:
         for name in ("ball", "dock"):

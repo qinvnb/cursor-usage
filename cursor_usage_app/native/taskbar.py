@@ -1,8 +1,9 @@
 """Windows 11 native taskbar usage widget implemented with ctypes only.
 
-The visible window is a native no-activate popup owned by the primary
-``Shell_TrayWnd`` and positioned inside its free visual band. Windows 11's
-XAML compositor obscures ordinary Win32 children. A separate hidden window
+The visible window is a per-pixel-alpha layered popup re-parented into the
+primary ``Shell_TrayWnd`` and positioned inside its free visual band. Windows
+11's XAML compositor obscures ordinary Win32 children, but a layered window
+first in the child z-order is composited above it. A separate hidden window
 receives Explorer restart and display/settings broadcasts.
 """
 
@@ -17,14 +18,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+from PIL import Image, ImageDraw
+
 from ..i18n import L
-from .win import is_fullscreen_session, keep_topmost
+from .win import LayeredBitmap, paint_layered, ui_font
 
 IS_WINDOWS = sys.platform == "win32"
 
 WM_DESTROY = 0x0002
-WM_PAINT = 0x000F
-WM_ERASEBKGND = 0x0014
 WM_SETTINGCHANGE = 0x001A
 WM_DISPLAYCHANGE = 0x007E
 WM_CONTEXTMENU = 0x007B
@@ -37,30 +38,25 @@ WM_DPICHANGED = 0x02E0
 WS_POPUP = 0x80000000
 WS_CLIPSIBLINGS = 0x04000000
 WS_CLIPCHILDREN = 0x02000000
+WS_EX_TOPMOST = 0x00000008
 WS_EX_TOOLWINDOW = 0x00000080
+WS_EX_LAYERED = 0x00080000
 WS_EX_NOACTIVATE = 0x08000000
 CS_HREDRAW = 0x0002
 CS_VREDRAW = 0x0001
 
 SW_HIDE = 0
-SW_SHOWNA = 8
+SWP_NOSIZE = 0x0001
+SWP_NOMOVE = 0x0002
 SWP_NOACTIVATE = 0x0010
-HWND_TOPMOST = ctypes.c_void_p(-1)
+SWP_SHOWWINDOW = 0x0040
+HWND_TOP = None
+GW_CHILD = 5
 
 TPM_RIGHTBUTTON = 0x0002
 TPM_RETURNCMD = 0x0100
 MF_STRING = 0x0000
 MF_SEPARATOR = 0x0800
-
-DT_LEFT = 0x0000
-DT_VCENTER = 0x0004
-DT_SINGLELINE = 0x0020
-DT_END_ELLIPSIS = 0x8000
-TRANSPARENT = 1
-PS_SOLID = 0
-IMAGE_ICON = 1
-LR_LOADFROMFILE = 0x0010
-DI_NORMAL = 0x0003
 
 MONITOR_DEFAULTTOPRIMARY = 1
 
@@ -69,10 +65,6 @@ ID_REFRESH = 1002
 ID_CLOSE = 1003
 TIMER_MAINTENANCE = 1
 TIMER_INTERVAL_MS = 2000
-TIMER_RAISE = 2
-# Explorer re-stacks the taskbar a moment after the foreground changes (Win+D,
-# app switches), pushing the widget below it; re-assert over the next second.
-RAISE_DELAYS_MS = (50, 200, 500, 1000)
 POLL_SECONDS = 4.0
 LAYOUT_CHECK_SECONDS = 30.0
 UIA_CACHE_SECONDS = 30.0
@@ -91,7 +83,6 @@ _SETTINGS_CACHE: dict[str, Any] | None = None
 
 if IS_WINDOWS:
     user32 = ctypes.WinDLL("user32", use_last_error=True)
-    gdi32 = ctypes.WinDLL("gdi32", use_last_error=True)
     kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
     shell32 = ctypes.WinDLL("shell32", use_last_error=True)
     ntdll = ctypes.WinDLL("ntdll", use_last_error=True)
@@ -115,16 +106,6 @@ if IS_WINDOWS:
             ("lpszMenuName", wintypes.LPCWSTR),
             ("lpszClassName", wintypes.LPCWSTR),
             ("hIconSm", wintypes.HICON),
-        ]
-
-    class PAINTSTRUCT(ctypes.Structure):
-        _fields_ = [
-            ("hdc", wintypes.HDC),
-            ("fErase", wintypes.BOOL),
-            ("rcPaint", wintypes.RECT),
-            ("fRestore", wintypes.BOOL),
-            ("fIncUpdate", wintypes.BOOL),
-            ("rgbReserved", ctypes.c_byte * 32),
         ]
 
     class RTL_OSVERSIONINFOW(ctypes.Structure):
@@ -173,33 +154,13 @@ if IS_WINDOWS:
     user32.MonitorFromWindow.argtypes = [wintypes.HWND, wintypes.DWORD]
     user32.LoadCursorW.restype = wintypes.HANDLE
     user32.LoadCursorW.argtypes = [wintypes.HINSTANCE, ctypes.c_void_p]
-    user32.LoadImageW.restype = wintypes.HANDLE
-    user32.LoadImageW.argtypes = [
-        wintypes.HINSTANCE,
-        wintypes.LPCWSTR,
-        wintypes.UINT,
-        ctypes.c_int,
-        ctypes.c_int,
-        wintypes.UINT,
-    ]
-    user32.DrawIconEx.argtypes = [
-        wintypes.HDC,
-        ctypes.c_int,
-        ctypes.c_int,
-        wintypes.HICON,
-        ctypes.c_int,
-        ctypes.c_int,
-        wintypes.UINT,
-        wintypes.HBRUSH,
-        wintypes.UINT,
-    ]
-    user32.DestroyIcon.argtypes = [wintypes.HICON]
     user32.RegisterClassExW.restype = wintypes.ATOM
     user32.RegisterClassExW.argtypes = [ctypes.POINTER(WNDCLASSEXW)]
     user32.UnregisterClassW.argtypes = [wintypes.LPCWSTR, wintypes.HINSTANCE]
-    user32.BeginPaint.restype = wintypes.HDC
-    user32.BeginPaint.argtypes = [wintypes.HWND, ctypes.POINTER(PAINTSTRUCT)]
-    user32.EndPaint.argtypes = [wintypes.HWND, ctypes.POINTER(PAINTSTRUCT)]
+    user32.SetParent.restype = wintypes.HWND
+    user32.SetParent.argtypes = [wintypes.HWND, wintypes.HWND]
+    user32.GetWindow.restype = wintypes.HWND
+    user32.GetWindow.argtypes = [wintypes.HWND, wintypes.UINT]
     user32.SetTimer.argtypes = [
         wintypes.HWND,
         ctypes.c_size_t,
@@ -218,7 +179,6 @@ if IS_WINDOWS:
         ctypes.c_int,
         wintypes.UINT,
     ]
-    user32.SetWindowRgn.argtypes = [wintypes.HWND, wintypes.HRGN, wintypes.BOOL]
     user32.PostMessageW.argtypes = [
         wintypes.HWND,
         wintypes.UINT,
@@ -226,16 +186,6 @@ if IS_WINDOWS:
         wintypes.LPARAM,
     ]
     user32.KillTimer.argtypes = [wintypes.HWND, ctypes.c_size_t]
-    user32.InvalidateRect.argtypes = [
-        wintypes.HWND,
-        ctypes.POINTER(wintypes.RECT),
-        wintypes.BOOL,
-    ]
-    user32.FillRect.argtypes = [
-        wintypes.HDC,
-        ctypes.POINTER(wintypes.RECT),
-        wintypes.HBRUSH,
-    ]
     user32.CreatePopupMenu.restype = wintypes.HMENU
     user32.AppendMenuW.argtypes = [
         wintypes.HMENU,
@@ -256,75 +206,8 @@ if IS_WINDOWS:
     user32.SetForegroundWindow.argtypes = [wintypes.HWND]
     user32.ClientToScreen.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.POINT)]
     user32.GetCursorPos.argtypes = [ctypes.POINTER(wintypes.POINT)]
-    user32.DrawTextW.argtypes = [
-        wintypes.HDC,
-        wintypes.LPCWSTR,
-        ctypes.c_int,
-        ctypes.POINTER(wintypes.RECT),
-        wintypes.UINT,
-    ]
     kernel32.GetModuleHandleW.restype = wintypes.HMODULE
     kernel32.GetModuleHandleW.argtypes = [wintypes.LPCWSTR]
-    gdi32.CreateCompatibleDC.restype = wintypes.HDC
-    gdi32.CreateCompatibleDC.argtypes = [wintypes.HDC]
-    gdi32.CreateCompatibleBitmap.restype = wintypes.HBITMAP
-    gdi32.CreateCompatibleBitmap.argtypes = [wintypes.HDC, ctypes.c_int, ctypes.c_int]
-    gdi32.SelectObject.restype = wintypes.HANDLE
-    gdi32.SelectObject.argtypes = [wintypes.HDC, wintypes.HANDLE]
-    gdi32.CreateSolidBrush.restype = wintypes.HBRUSH
-    gdi32.CreateSolidBrush.argtypes = [wintypes.COLORREF]
-    gdi32.CreatePen.restype = wintypes.HANDLE
-    gdi32.CreatePen.argtypes = [ctypes.c_int, ctypes.c_int, wintypes.COLORREF]
-    gdi32.CreateRoundRectRgn.restype = wintypes.HRGN
-    gdi32.CreateRoundRectRgn.argtypes = [
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-    ]
-    gdi32.RoundRect.argtypes = [
-        wintypes.HDC,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-    ]
-    gdi32.CreateFontW.restype = wintypes.HANDLE
-    gdi32.CreateFontW.argtypes = [
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        wintypes.LPCWSTR,
-    ]
-    gdi32.SetTextColor.argtypes = [wintypes.HDC, wintypes.COLORREF]
-    gdi32.SetBkMode.argtypes = [wintypes.HDC, ctypes.c_int]
-    gdi32.DeleteObject.argtypes = [wintypes.HANDLE]
-    gdi32.DeleteDC.argtypes = [wintypes.HDC]
-    gdi32.BitBlt.argtypes = [
-        wintypes.HDC,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        ctypes.c_int,
-        wintypes.HDC,
-        ctypes.c_int,
-        ctypes.c_int,
-        wintypes.DWORD,
-    ]
 
 
 def _utc_now() -> str:
@@ -683,8 +566,84 @@ def _money(cents: float) -> str:
 
 def _app_icon_path() -> Path:
     if getattr(sys, "frozen", False):
-        return Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent)) / "assets" / "app.ico"
-    return Path(__file__).resolve().parents[2] / "assets" / "app.ico"
+        return Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent)) / "assets" / "app.png"
+    return Path(__file__).resolve().parents[2] / "assets" / "app.png"
+
+
+_ICON_CACHE: dict[int, Image.Image | None] = {}
+
+
+def _app_icon(size: int) -> Image.Image | None:
+    if size not in _ICON_CACHE:
+        try:
+            with Image.open(_app_icon_path()) as source:
+                _ICON_CACHE[size] = source.convert("RGBA").resize((size, size), Image.Resampling.LANCZOS)
+        except OSError:
+            _ICON_CACHE[size] = None
+    return _ICON_CACHE[size]
+
+
+def _accent(progress: float) -> tuple[int, int, int, int]:
+    # Same thresholds and colors as the floating ball ring.
+    if progress >= 0.9:
+        return (220, 38, 38, 255)
+    if progress >= 0.7:
+        return (217, 119, 6, 255)
+    return (37, 99, 235, 255)
+
+
+def render_dock(width: int, height: int, dpi: int, usage: tuple[float, float] | None) -> Image.Image:
+    """RGBA widget image: rounded card, app icon, "$used / $limit" and a progress bar."""
+    scale = dpi / 96
+    ss = 3
+    radius = max(10, round(12 * scale))
+    icon_size = max(22, round(24 * scale))
+    icon_x = max(7, round(8 * scale))
+    text_left = icon_x + icon_size + max(7, round(8 * scale))
+    text_right = width - max(8, round(10 * scale))
+    track_h = max(5, round(6 * scale))
+    track_y = height - track_h - max(4, round(5 * scale))
+
+    if usage is None:
+        text, progress = "-- / --", 0.0
+    else:
+        used, limit = usage
+        text = f"{_money(used)} / {_money(limit)}"
+        progress = min(1.0, used / limit) if limit > 0 else 0.0
+
+    # Shapes are supersampled for smooth corners; text is drawn at 1x to stay crisp.
+    big = Image.new("RGBA", (width * ss, height * ss), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(big)
+    draw.rounded_rectangle(
+        (0, 0, width * ss - 1, height * ss - 1),
+        radius=radius * ss,
+        fill=(255, 255, 255, 255),
+        outline=(219, 227, 238, 255),
+        width=max(1, round(scale)) * ss,
+    )
+    track = (text_left * ss, track_y * ss, text_right * ss, (track_y + track_h) * ss)
+    draw.rounded_rectangle(track, radius=track_h * ss // 2, fill=(226, 232, 240, 255))
+    fill_right = text_left + round((text_right - text_left) * progress)
+    if fill_right - text_left >= track_h:
+        draw.rounded_rectangle(
+            (track[0], track[1], fill_right * ss, track[3]), radius=track_h * ss // 2, fill=_accent(progress)
+        )
+    image = big.resize((width, height), Image.Resampling.LANCZOS)
+
+    icon = _app_icon(icon_size)
+    if icon is not None:
+        image.alpha_composite(icon, (icon_x, max(3, (height - icon_size) // 2)))
+
+    draw = ImageDraw.Draw(image)
+    font = ui_font(max(13, round(14 * scale)), bold=True)
+    available = text_right - text_left
+    while len(text) > 1 and draw.textlength(text, font=font) > available:
+        text = text[:-2] + "…"
+    box = draw.textbbox((0, 0), text, font=font)
+    band_bottom = track_y - max(1, round(2 * scale))
+    y = (band_bottom - (box[3] - box[1])) / 2 - box[1]
+    draw.text((text_left, y), text, font=font, fill=(15, 23, 42, 255))
+    return image
 
 
 class TaskbarWidget:
@@ -726,9 +685,6 @@ class TaskbarWidget:
         self.layout: dict[str, int] | None = None
         self.usage: tuple[float, float] | None = None
         self.reason = "starting"
-        self.raise_step = 0
-        self.app_icon = 0
-        self.app_icon_size = 0
         self._wndproc = WNDPROC(self._window_proc)
         self._register_class()
 
@@ -793,7 +749,7 @@ class TaskbarWidget:
             self.next_retry_at = time.monotonic() + self.retry_seconds
             self.retry_seconds = min(MAX_RETRY_SECONDS, self.retry_seconds * 2.0)
         else:
-            # Fullscreen / no free space: re-check at the normal poll cadence
+            # No free space: re-check at the normal poll cadence
             # instead of on every maintenance tick.
             self.next_retry_at = time.monotonic() + POLL_SECONDS
         _write_component_status(
@@ -807,16 +763,10 @@ class TaskbarWidget:
             }
         )
 
-    def _fullscreen(self) -> bool:
-        return is_fullscreen_session()
-
     def _attach(self, *, force: bool = False) -> bool:
         """Compute the layout and apply it only when something actually changed."""
         self.next_layout_at = time.monotonic() + LAYOUT_CHECK_SECONDS
         taskbar = int(user32.FindWindowW("Shell_TrayWnd", None) or 0)
-        if self._fullscreen():
-            self._hide("fullscreen", retry=False)
-            return False
         global _LAST_WIDGET_RECT
         current_rect = _rect(self.widget_hwnd) if self.widget_hwnd else None
         layout, reason = _embedding_layout(taskbar, ignore_rect=current_rect or _LAST_WIDGET_RECT)
@@ -843,55 +793,53 @@ class TaskbarWidget:
         screen_x = taskbar_rect[0] + layout["x"]
         screen_y = taskbar_rect[1] + layout["y"]
         if not self.widget_hwnd or not user32.IsWindow(self.widget_hwnd):
-            self.widget_hwnd = int(
+            hwnd = int(
                 user32.CreateWindowExW(
-                    WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+                    WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOACTIVATE,
                     self.class_name,
                     "Cursor Usage",
                     WS_POPUP | WS_CLIPSIBLINGS,
-                    screen_x,
-                    screen_y,
+                    0,
+                    0,
                     layout["width"],
                     layout["height"],
-                    taskbar,
+                    None,
                     None,
                     self.hinstance,
                     None,
                 )
                 or 0
             )
-            if not self.widget_hwnd:
+            if not hwnd:
                 self._hide("create-widget-failed", retry=True)
                 return False
+            # Windows 11 composites the taskbar's XAML island over its ordinary
+            # children; a layered popup re-parented into Shell_TrayWnd and kept
+            # first in the child z-order is drawn above it. As a child it moves
+            # with the taskbar, so Explorer re-stacking (Win+D, Task View)
+            # cannot cover it.
+            if not user32.SetParent(hwnd, taskbar):
+                user32.DestroyWindow(hwnd)
+                self._hide("set-parent-failed", retry=True)
+                return False
+            self.widget_hwnd = hwnd
+        self.layout = dict(layout)
         user32.SetWindowPos(
             self.widget_hwnd,
-            HWND_TOPMOST,
-            screen_x,
-            screen_y,
+            HWND_TOP,
+            layout["x"],
+            layout["y"],
             layout["width"],
             layout["height"],
-            SWP_NOACTIVATE,
+            SWP_NOACTIVATE | SWP_SHOWWINDOW,
         )
-        radius = max(10, round(12 * layout["dpi"] / 96))
-        region = gdi32.CreateRoundRectRgn(
-            0,
-            0,
-            layout["width"] + 1,
-            layout["height"] + 1,
-            radius,
-            radius,
-        )
-        if region and not user32.SetWindowRgn(self.widget_hwnd, region, True):
-            gdi32.DeleteObject(region)
-        user32.ShowWindow(self.widget_hwnd, SW_SHOWNA)
-        user32.InvalidateRect(self.widget_hwnd, None, False)
+        self._render()
         _LAST_WIDGET_RECT = (
             screen_x,
             screen_y,
             screen_x + layout["width"],
             screen_y + layout["height"],
         )
-        self.layout = dict(layout)
         self.visible = True
         self.reason = "ok"
         self.retry_seconds = 1.0
@@ -915,47 +863,29 @@ class TaskbarWidget:
         if usage == self.usage:
             return
         self.usage = usage
-        if self.widget_hwnd and user32.IsWindow(self.widget_hwnd):
-            user32.InvalidateRect(self.widget_hwnd, None, False)
-
-    def check_fullscreen(self) -> None:
-        """Called on every foreground change: hide/restore promptly, keep above the taskbar."""
-        if not self.running or not self.controller_hwnd:
-            return
-        if self._fullscreen():
-            if self.visible:
-                self._hide("fullscreen", retry=False)
-            return
-        if not self.visible and self.reason == "fullscreen":
-            self._attach()
-        elif self.visible:
-            keep_topmost(self.widget_hwnd)
-
-    def on_foreground_changed(self) -> None:
-        self.check_fullscreen()
-        if self.visible and self.controller_hwnd:
-            self.raise_step = 0
-            user32.SetTimer(self.controller_hwnd, TIMER_RAISE, RAISE_DELAYS_MS[0], None)
-
-    def _raise_tick(self) -> None:
         if self.visible:
-            keep_topmost(self.widget_hwnd)
-        self.raise_step += 1
-        if self.visible and self.raise_step < len(RAISE_DELAYS_MS):
-            delay = RAISE_DELAYS_MS[self.raise_step] - RAISE_DELAYS_MS[self.raise_step - 1]
-            user32.SetTimer(self.controller_hwnd, TIMER_RAISE, delay, None)
-        else:
-            user32.KillTimer(self.controller_hwnd, TIMER_RAISE)
+            self._render()
+
+    def _render(self) -> None:
+        if not self.layout or not self.widget_hwnd:
+            return
+        image = render_dock(self.layout["width"], self.layout["height"], self.layout["dpi"], self.usage)
+        paint_layered(self.widget_hwnd, LayeredBitmap(image), self.layout["x"], self.layout["y"])
+
+    def _keep_first_child(self) -> None:
+        """Stay above the XAML island: first among Shell_TrayWnd's children."""
+        if self.taskbar_hwnd and self.widget_hwnd:
+            if int(user32.GetWindow(self.taskbar_hwnd, GW_CHILD) or 0) != self.widget_hwnd:
+                user32.SetWindowPos(
+                    self.widget_hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE
+                )
 
     def _poll_visible(self) -> None:
-        """Cheap periodic check while embedded: fullscreen + periodic layout."""
-        if self._fullscreen():
-            self._hide("fullscreen", retry=False)
-            return
+        """Cheap periodic check while embedded: child order + periodic layout."""
         if time.monotonic() >= self.next_layout_at:
             self._attach()
             return
-        keep_topmost(self.widget_hwnd)
+        self._keep_first_child()
 
     def _maintenance(self) -> None:
         now = time.monotonic()
@@ -974,7 +904,10 @@ class TaskbarWidget:
             if self.visible:
                 self._poll_visible()
 
-    def _show_menu(self, hwnd: int, x: int, y: int) -> None:
+    def _show_menu(self, x: int, y: int) -> None:
+        # The widget is a child of Explorer's taskbar; the menu belongs to our
+        # own top-level controller so it can take the foreground.
+        hwnd = self.controller_hwnd
         menu = user32.CreatePopupMenu()
         if not menu:
             return
@@ -1008,182 +941,6 @@ class TaskbarWidget:
         finally:
             user32.DestroyMenu(menu)
 
-    def _ensure_app_icon(self, size: int) -> int:
-        if self.app_icon and self.app_icon_size == size:
-            return self.app_icon
-        if self.app_icon:
-            user32.DestroyIcon(self.app_icon)
-        self.app_icon = int(
-            user32.LoadImageW(
-                None,
-                str(_app_icon_path()),
-                IMAGE_ICON,
-                size,
-                size,
-                LR_LOADFROMFILE,
-            )
-            or 0
-        )
-        self.app_icon_size = size if self.app_icon else 0
-        return self.app_icon
-
-    def _paint(self, hwnd: int) -> None:
-        ps = PAINTSTRUCT()
-        hdc = user32.BeginPaint(hwnd, ctypes.byref(ps))
-        if not hdc:
-            return
-        mem_dc = bitmap = old_bitmap = None
-        brushes: list[int] = []
-        pens: list[int] = []
-        fonts: list[int] = []
-        old_brush = old_pen = old_font = None
-        try:
-            client = wintypes.RECT()
-            user32.GetClientRect(hwnd, ctypes.byref(client))
-            width = max(1, int(client.right - client.left))
-            height = max(1, int(client.bottom - client.top))
-            mem_dc = gdi32.CreateCompatibleDC(hdc)
-            bitmap = gdi32.CreateCompatibleBitmap(hdc, width, height)
-            old_bitmap = gdi32.SelectObject(mem_dc, bitmap)
-            dpi = _dpi_for_window(hwnd)
-            scale = dpi / 96
-            radius = max(10, round(12 * scale))
-
-            background = gdi32.CreateSolidBrush(0x00FFFFFF)
-            border = gdi32.CreatePen(PS_SOLID, max(1, round(scale)), 0x00EEE3DB)
-            brushes.append(background)
-            pens.append(border)
-            old_brush = gdi32.SelectObject(mem_dc, background)
-            old_pen = gdi32.SelectObject(mem_dc, border)
-            gdi32.RoundRect(mem_dc, 0, 0, width, height, radius, radius)
-
-            if self.usage is None:
-                used_text = "-- / --"
-                progress = 0.0
-            else:
-                used, limit = self.usage
-                used_text = f"{_money(used)} / {_money(limit)}"
-                progress = min(1.0, used / limit) if limit > 0 else 0.0
-
-            # Match the floating ball exactly: blue <70%, amber <90%, red >=90%.
-            accent_color = 0x00EB6325
-            if progress >= 0.9:
-                accent_color = 0x002626DC
-            elif progress >= 0.7:
-                accent_color = 0x000677D9
-            accent = gdi32.CreateSolidBrush(accent_color)
-            accent_pen = gdi32.CreatePen(PS_SOLID, 1, accent_color)
-            brushes.append(accent)
-            pens.append(accent_pen)
-
-            icon_size = max(22, round(24 * scale))
-            icon_x = max(7, round(8 * scale))
-            icon_y = max(3, (height - icon_size) // 2)
-            app_icon = self._ensure_app_icon(icon_size)
-            if app_icon:
-                user32.DrawIconEx(
-                    mem_dc,
-                    icon_x,
-                    icon_y,
-                    app_icon,
-                    icon_size,
-                    icon_size,
-                    0,
-                    None,
-                    DI_NORMAL,
-                )
-
-            value_font = gdi32.CreateFontW(
-                -max(13, round(14 * scale)),
-                0,
-                0,
-                0,
-                700,
-                False,
-                False,
-                False,
-                1,
-                0,
-                0,
-                5,
-                0,
-                "Segoe UI",
-            )
-            fonts.append(value_font)
-            gdi32.SetBkMode(mem_dc, TRANSPARENT)
-            text_left = icon_x + icon_size + max(7, round(8 * scale))
-            text_right = width - max(8, round(10 * scale))
-            old_font = gdi32.SelectObject(mem_dc, value_font)
-            gdi32.SetTextColor(mem_dc, 0x002A170F)
-            track_h = max(5, round(6 * scale))
-            track_y = height - track_h - max(4, round(5 * scale))
-            value_rect = wintypes.RECT(
-                text_left,
-                1,
-                text_right,
-                track_y - max(1, round(2 * scale)),
-            )
-            user32.DrawTextW(
-                mem_dc,
-                used_text,
-                -1,
-                ctypes.byref(value_rect),
-                DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS,
-            )
-
-            track = gdi32.CreateSolidBrush(0x00F0E8E2)
-            track_pen = gdi32.CreatePen(PS_SOLID, 1, 0x00F0E8E2)
-            brushes.append(track)
-            pens.append(track_pen)
-            gdi32.SelectObject(mem_dc, track)
-            gdi32.SelectObject(mem_dc, track_pen)
-            gdi32.RoundRect(
-                mem_dc,
-                text_left,
-                track_y,
-                text_right,
-                track_y + track_h,
-                track_h,
-                track_h,
-            )
-            fill_right = text_left + round((text_right - text_left) * progress)
-            if fill_right > text_left:
-                gdi32.SelectObject(mem_dc, accent)
-                gdi32.SelectObject(mem_dc, accent_pen)
-                gdi32.RoundRect(
-                    mem_dc,
-                    text_left,
-                    track_y,
-                    fill_right,
-                    track_y + track_h,
-                    track_h,
-                    track_h,
-                )
-            gdi32.BitBlt(hdc, 0, 0, width, height, mem_dc, 0, 0, 0x00CC0020)
-        finally:
-            if mem_dc:
-                if old_font:
-                    gdi32.SelectObject(mem_dc, old_font)
-                if old_pen:
-                    gdi32.SelectObject(mem_dc, old_pen)
-                if old_brush:
-                    gdi32.SelectObject(mem_dc, old_brush)
-                if old_bitmap:
-                    gdi32.SelectObject(mem_dc, old_bitmap)
-                if bitmap:
-                    gdi32.DeleteObject(bitmap)
-                for font in fonts:
-                    if font:
-                        gdi32.DeleteObject(font)
-                for pen in pens:
-                    if pen:
-                        gdi32.DeleteObject(pen)
-                for brush in brushes:
-                    if brush:
-                        gdi32.DeleteObject(brush)
-                gdi32.DeleteDC(mem_dc)
-            user32.EndPaint(hwnd, ctypes.byref(ps))
-
     def _window_proc(self, hwnd: int, msg: int, wparam: int, lparam: int) -> int:
         try:
             if msg == self.taskbar_created and hwnd == self.controller_hwnd:
@@ -1208,16 +965,8 @@ class TaskbarWidget:
                 self._attach(force=msg == WM_DPICHANGED)
                 return 0
             if msg == WM_TIMER and hwnd == self.controller_hwnd:
-                if wparam == TIMER_RAISE:
-                    self._raise_tick()
-                else:
-                    self._maintenance()
+                self._maintenance()
                 return 0
-            if msg == WM_PAINT and hwnd == self.widget_hwnd:
-                self._paint(hwnd)
-                return 0
-            if msg == WM_ERASEBKGND and hwnd == self.widget_hwnd:
-                return 1
             if msg == WM_LBUTTONUP and hwnd == self.widget_hwnd:
                 self.on_show()
                 return 0
@@ -1227,12 +976,12 @@ class TaskbarWidget:
                     ctypes.c_short((lparam >> 16) & 0xFFFF).value,
                 )
                 user32.ClientToScreen(hwnd, ctypes.byref(point))
-                self._show_menu(hwnd, int(point.x), int(point.y))
+                self._show_menu(int(point.x), int(point.y))
                 return 0
             if msg == WM_CONTEXTMENU and hwnd == self.widget_hwnd:
                 x = ctypes.c_short(lparam & 0xFFFF).value
                 y = ctypes.c_short((lparam >> 16) & 0xFFFF).value
-                self._show_menu(hwnd, x, y)
+                self._show_menu(x, y)
                 return 0
             if msg == WM_COMMAND:
                 return 0
@@ -1240,10 +989,6 @@ class TaskbarWidget:
                 # The message loop is shared with the floating ball: never quit it here.
                 self.running = False
                 self._destroy_widget()
-                if self.app_icon:
-                    user32.DestroyIcon(self.app_icon)
-                    self.app_icon = 0
-                    self.app_icon_size = 0
                 _write_component_status(
                     {
                         "state": "stopped",
@@ -1285,7 +1030,6 @@ class TaskbarWidget:
         _UIA_NOTIFY_HWND = 0
         if self.controller_hwnd and user32.IsWindow(self.controller_hwnd):
             user32.KillTimer(self.controller_hwnd, TIMER_MAINTENANCE)
-            user32.KillTimer(self.controller_hwnd, TIMER_RAISE)
             user32.DestroyWindow(self.controller_hwnd)
         if self.widget_hwnd and user32.IsWindow(self.widget_hwnd):
             user32.DestroyWindow(self.widget_hwnd)
